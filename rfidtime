@@ -1,0 +1,34 @@
+#!/bin/bash
+# inspired by:  http://jimmyg.org/blog/2010/python-daemon-init-script.html
+
+DAEMON=/usr/bin/python
+ARGS="/usr/bin/rfidtime.py serve"
+PIDFILE=/var/rfidtime.pid
+
+case "$1" in
+  start)
+	echo "loading the modules"
+	modprobe rdc321x_gpio
+	modprobe i2c-algo-bit
+	modprobe i2c-gpio
+	modprobe i2c-gpio-custom bus0=0,11,13
+	modprobe i2c-dev
+
+    echo "Starting server"
+    /sbin/start-stop-daemon --start --pidfile $PIDFILE \
+        --user www-data --group www-data \
+        -b --make-pidfile \
+        --chuid www-data \
+        --exec $DAEMON $ARGS
+    ;;
+  stop)
+    echo "Stopping server"
+    /sbin/start-stop-daemon --stop --pidfile $PIDFILE --verbose
+    ;;
+  *)
+    echo "Usage: /etc/init.d/rfidtime {start|stop}"
+    exit 1
+    ;;
+esac
+
+exit 0
