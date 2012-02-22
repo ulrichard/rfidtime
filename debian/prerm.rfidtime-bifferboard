@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -e
+
+case "$1" in
+	remove|upgrade|remove-in-favour|deconfigure-in-favour)
+		#
+		# do here pre removes
+		#
+		update-rc.d -f rfidtime-bifferboard remove
+
+		# remove the compiled files
+		rm /usr/bin/rfidtime.pyc
+		rm /usr/bin/rfidtime.pyo
+		;;
+	failed-upgrade)
+		;;
+esac
+
+exit 0

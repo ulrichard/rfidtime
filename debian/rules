@@ -1,0 +1,94 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+
+configure: configure-stamp
+configure-stamp:
+	dh_testdir
+	# Add here commands to configure the package.
+
+	touch configure-stamp
+
+
+build: build-stamp
+
+build-stamp: configure-stamp  
+	dh_testdir
+
+	touch $@
+
+clean: 
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp configure-stamp
+
+	# Add here commands to clean up after the build process.
+	# $(MAKE) clean
+	rm -rf $(CURDIR)/build-debian
+	rm -rf $(CURDIR)/debian/tmp
+	rm -rf $(CURDIR)/debian/rfidtime
+
+	dh_clean 
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_prep  
+	dh_installdirs
+
+	# Add here commands to install the package into debian/rfidtime
+
+	mkdir -p $(CURDIR)/debian/tmp/usr/bin
+	mkdir -p $(CURDIR)/debian/tmp/etc/init.d
+	install -m 0755 rfidtime.py	  $(CURDIR)/debian/tmp/usr/bin
+	install -m 0755 rfidtime.cfg  $(CURDIR)/debian/tmp/etc
+	install -m 0755 rfidtime	  $(CURDIR)/debian/tmp/etc/init.d
+
+
+# Build architecture-independent files here.
+binary-indep: build install
+# We have nothing to do by default.
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs 
+	dh_installdocs
+	dh_installexamples
+	dh_install --sourcedir=debian/rfidtime/
+#	dh_installmenu
+#	dh_installdebconf
+#	dh_installlogrotate
+#	dh_installemacsen
+#	dh_installpam
+#	dh_installmime
+#	dh_python
+#	dh_installinit
+	dh_installcron
+	dh_installmodules
+#	dh_installinfo
+	dh_installman
+	dh_lintian
+	dh_link
+	dh_strip
+	dh_compress
+#	dh_perl
+	dh_makeshlibs -prfidtime -V'rfidtime (>= 0.0.1)'
+	dh_shlibdeps -a
+	dh_fixperms
+	dh_installdeb
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install configure

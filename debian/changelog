@@ -1,0 +1,50 @@
+rfidtime (0.0.10) squeeze; urgency=low
+
+  * Separating package for bifferboard / alix
+
+ -- Richard Ulrich <richi@paraeasy.ch>  Tue, 21 Feb 2012 22:33:00 +0100
+
+rfidtime (0.0.9) squeeze; urgency=low
+
+  * Starting the daemon upon booting.
+  * loading the modules in the daemon start script.
+
+ -- Richard Ulrich <richi@paraeasy.ch>  Mon, 10 Oct 2011 22:33:00 +0200
+
+rfidtime (0.0.8) squeeze; urgency=low
+
+  * providing the config options for the i2c-gpio-custom module.
+  * marking configuration files as such.
+
+ -- Richard Ulrich <richi@paraeasy.ch>  Mon, 10 Oct 2011 22:33:00 +0200
+
+rfidtime (0.0.7) maverick natty squeeze; urgency=low
+
+  * fixed an indentation error
+
+ -- Richard Ulrich <richi@paraeasy.ch>  Mon, 10 Oct 2011 00:33:00 +0200
+
+rfidtime (0.0.6) maverick natty squeeze; urgency=low
+
+  * talking to the blinkM
+
+ -- Richard Ulrich <richi@paraeasy.ch>  Mon, 10 Oct 2011 00:14:00 +0200
+
+rfidtime (0.0.5) maverick natty squeeze; urgency=low
+
+  * changes from live testing
+
+ -- Richard Ulrich <richi@paraeasy.ch>  Thu, 7 Oct 2011 21:26:00 +0200
+
+rfidtime (0.0.4) maverick natty squeeze; urgency=low
+
+  * Changes for python-configglue 1.0
+
+ -- Richard Ulrich <richi@paraeasy.ch>  Thu, 6 Oct 2011 23:28:00 +0200
+
+rfidtime (0.0.1~maverick) maverick; urgency=low
+
+  * Initial package
+
+ -- Richard Ulrich <richi@paraeasy.ch>  Tue, 20 Sep 2011 19:53:00 +0200
+

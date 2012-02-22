@@ -1,0 +1,27 @@
+Source: rfidtime
+Section: web
+Priority: optional
+Maintainer: Richard Ulrich <richi@paraeasy.ch>
+Build-Depends: 
+standards-Version: 3.8.1.0
+Homepage: http://sourceforge.net/projects/flightpred
+
+Package: rfidtime-base
+Architecture: all
+Essential: no
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${dist:Depends}, python-pymssql, python-serial, python-daemon, python-configglue (>= 1.0), python-configobj, ntp, beep
+Description: Logs your time in the BORM ERP system with an rfid tag reader. Base package.
+
+Package: rfidtime-bifferboard
+Conflicts: rfidtime-alix
+Architecture: all
+Essential: no
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${dist:Depends}, rfidtime-base, python-smbus, i2c-tools
+Description: Logs your time in the BORM ERP system with an rfid tag reader. Package for Bifferboard with signalling on a BlinkM through i2c.
+
+Package: rfidtime-alix
+Conflicts: rfidtime-bifferboard
+Architecture: all
+Essential: no
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${dist:Depends}, rfidtime-base
+Description: Logs your time in the BORM ERP system with an rfid tag reader. Package for an Alix with signalling on the beeper.
