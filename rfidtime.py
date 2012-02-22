@@ -69,6 +69,8 @@ def main(config, opts):
 		# the mapping from rfid tag to userid would better be done in the database, but for now, the cfg file is ok
 		if not rfidtag in userconfig:
 			print "Unknown rfid tag : " + rfidtag
+			if configval.get('useSpeech'):
+				os.system('echo "Unknown rfid tag" | festival --pipe --tts');
 			continue
 
 		userid = int(userconfig[rfidtag])
@@ -93,6 +95,8 @@ def open_or_close_time_record(dbconn, userid, writetodb):
 			light_bulb('red')
 		if configval.get('useBeep'):
 			os.system('beep -f 1000 -l 100');
+		if configval.get('useSpeech'):
+			os.system('echo "no records for this user." | festival --pipe --tts');
 	else:
 		print "last record : %d, %d, %s, %s, %s, %s" % (row['DZ_DATEN_ID'], row[1], row['CURRENTUSER'], row['DZ_DATUM'], row['DZ_BZ'], row['DZ_EZ'])
 	  
@@ -106,6 +110,8 @@ def open_or_close_time_record(dbconn, userid, writetodb):
 				light_bulb('green')
 			if configval.get('useBeep'):
 				os.system('beep -f 1000 -l 10 -n -f 2000 -l 10');
+			if configval.get('useSpeech'):
+				os.system('echo "good bye %s." | festival --pipe --tts' % row['CURRENTUSER']);
 		else:
 			# create a new record with mostly the same settings as the last one
 			print "The last record is closed. Creating a new record."
@@ -117,6 +123,8 @@ def open_or_close_time_record(dbconn, userid, writetodb):
 				light_bulb('blue')
 			if configval.get('useBeep'):
 				os.system('beep -f 2000 -l 10 -n -f 1000 -l 10');
+			if configval.get('useSpeech'):
+				os.system('echo "Hello %s. Happy working." | festival --pipe --tts' % row['CURRENTUSER']);
 		
 		if writetodb:
 			dbconn.commit()

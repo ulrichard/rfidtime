@@ -23,5 +23,5 @@ Package: rfidtime-alix
 Conflicts: rfidtime-bifferboard
 Architecture: all
 Essential: no
-Depends: ${shlibs:Depends}, ${misc:Depends}, ${dist:Depends}, rfidtime-base
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${dist:Depends}, rfidtime-base, festival
 Description: Logs your time in the BORM ERP system with an rfid tag reader. Package for an Alix with signalling on the beeper.
