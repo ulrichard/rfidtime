@@ -1,3 +1,9 @@
+rfidtime (0.0.11) squeeze; urgency=low
+
+  * No changes, just to test continuous integration
+
+ -- Richard Ulrich <richi@paraeasy.ch>  Wed, 22 Feb 2012 20:48:00 +0100
+
 rfidtime (0.0.10) squeeze; urgency=low
 
   * Separating package for bifferboard / alix
