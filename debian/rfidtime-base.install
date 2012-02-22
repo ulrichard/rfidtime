@@ -1,0 +1,3 @@
+/usr/bin/rfidtime.py
+/etc/rfidtime.cfg
+/etc/init.d/rfidtime

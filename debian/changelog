@@ -1,3 +1,9 @@
+rfidtime (0.0.12) squeeze; urgency=low
+
+  * Refining postinst and prerm scripts
+
+ -- Richard Ulrich <richi@paraeasy.ch>  Wed, 22 Feb 2012 21:17:00 +0100
+
 rfidtime (0.0.11) squeeze; urgency=low
 
   * No changes, just to test continuous integration
