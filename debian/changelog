@@ -1,3 +1,9 @@
+rfidtime (0.0.14) squeeze; urgency=low
+
+  * splitting the start-stop-scripts
+
+ -- Richard Ulrich <richi@paraeasy.ch>  Thu, 23 Feb 2012 20:11:00 +0100
+
 rfidtime (0.0.13) squeeze; urgency=low
 
   * Adding speech output

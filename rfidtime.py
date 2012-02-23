@@ -75,7 +75,7 @@ def main(config, opts):
 
 		userid = int(userconfig[rfidtag])
 		if userid:
-			open_or_close_time_record(conn, userid, configval.get('writetodb'))
+			open_or_close_time_record(conn, userid, configval)
 		time.sleep(2.0)
 		ser.flushInput()
 
@@ -85,7 +85,7 @@ def main(config, opts):
 	exit()
 
 
-def open_or_close_time_record(dbconn, userid, writetodb):
+def open_or_close_time_record(dbconn, userid, configval):
 	cur = dbconn.cursor()
 	cur.execute('SELECT TOP 1 * FROM DZ_DATEN WHERE MITARBEITER_ID=%d ORDER BY DZ_DATUM DESC, DZ_BZ DESC', userid)
 	row = cur.fetchone()
@@ -126,7 +126,7 @@ def open_or_close_time_record(dbconn, userid, writetodb):
 			if configval.get('useSpeech'):
 				os.system('echo "Hello %s. Happy working." | festival --pipe --tts' % row['CURRENTUSER']);
 		
-		if writetodb:
+		if configval.get('writetodb'):
 			dbconn.commit()
 		else:
 			dbconn.rollback()

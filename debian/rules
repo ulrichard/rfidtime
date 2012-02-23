@@ -50,7 +50,8 @@ install: build
 	mkdir -p $(CURDIR)/debian/rfidtime/etc/init.d
 	install -m 0755 rfidtime.py	  $(CURDIR)/debian/rfidtime/usr/bin
 	install -m 0755 rfidtime.cfg  $(CURDIR)/debian/rfidtime/etc
-	install -m 0755 rfidtime	  $(CURDIR)/debian/rfidtime/etc/init.d
+	install -m 0755 rfidtime-bifferboard $(CURDIR)/debian/rfidtime/etc/init.d
+	install -m 0755 rfidtime-alix	     $(CURDIR)/debian/rfidtime/etc/init.d
 
 
 # Build architecture-independent files here.
@@ -82,7 +83,7 @@ binary-arch: build install
 	dh_strip
 	dh_compress
 #	dh_perl
-	dh_makeshlibs -prfidtime -V'rfidtime (>= 0.0.12)'
+	dh_makeshlibs -prfidtime -V'rfidtime (>= 0.0.13)'
 	dh_shlibdeps -a
 	dh_fixperms
 	dh_installdeb

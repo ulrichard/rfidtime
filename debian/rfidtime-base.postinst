@@ -22,8 +22,6 @@ case "$1" in
 	configure)
 		# load the modules for using the gpio pins as i2c
 
-		update-rc.d -f rfidtime-base defaults
-
 		# compile the python file
 		# http://effbot.org/zone/python-compile.htm
 		python -c 'import sys, py_compile ; exit_status = int(not py_compile(\"/usr/bin/rfidtime.py\")); sys.exit(exit_status)' -q /usr/bin

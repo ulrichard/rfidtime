@@ -7,10 +7,8 @@ case "$1" in
 		#
 		# do here pre removes
 		#
+		update-rc.d -f rfidtime-alix remove
 
-		# remove the compiled files
-		rm /usr/bin/rfidtime.pyc
-		rm /usr/bin/rfidtime.pyo
 		;;
 	failed-upgrade)
 		;;
