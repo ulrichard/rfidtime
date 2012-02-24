@@ -29,10 +29,6 @@ case "$1" in
 
 		update-rc.d -f rfidtime-bifferboard defaults
 
-		# compile the python file
-		# http://effbot.org/zone/python-compile.htm
-		python -c 'import sys, py_compile ; exit_status = int(not py_compile(\"/usr/bin/rfidtime.py\")); sys.exit(exit_status)' -q /usr/bin
-
 		;;
 
 	abort-upgrade)
