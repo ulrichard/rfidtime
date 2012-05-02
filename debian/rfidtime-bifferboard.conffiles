@@ -1,0 +1,4 @@
+/etc/init.d/rfidtime-bifferboard
+/etc/cron.d/rfidtime-bifferboard
+/etc/modprobe.d/rfidtime-bifferboard.conf
+

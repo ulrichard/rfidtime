@@ -1,8 +1,10 @@
-rfidtime (0.0.14) squeeze; urgency=low
+rfidtime (0.0.16) squeeze; urgency=low
 
   * splitting the start-stop-scripts
+  * corrected the python compiling in postinst
+  * made the base postinst and prerem a bit more robust
 
- -- Richard Ulrich <richi@paraeasy.ch>  Thu, 23 Feb 2012 20:11:00 +0100
+ -- Richard Ulrich <richi@paraeasy.ch>  Tue, 28 Feb 2012 21:37:00 +0100
 
 rfidtime (0.0.13) squeeze; urgency=low
 

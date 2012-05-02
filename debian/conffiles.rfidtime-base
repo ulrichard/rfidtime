@@ -1,5 +1,0 @@
-/etc/rfidtime.cfg
-/etc/init.d/rfidtime
-/etc/cron.d/rfidtime
-/etc/modprobe.d/rfidtime.conf
-

@@ -9,8 +9,8 @@ case "$1" in
 		#
 
 		# remove the compiled files
-		rm /usr/bin/rfidtime.pyc
-		rm /usr/bin/rfidtime.pyo
+		rm -f /usr/bin/rfidtime.pyc
+		rm -f /usr/bin/rfidtime.pyo
 		;;
 	failed-upgrade)
 		;;

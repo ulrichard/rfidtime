@@ -24,7 +24,7 @@ case "$1" in
 
 		# compile the python file
 		# http://effbot.org/zone/python-compile.htm
-		python -c 'import sys, py_compile ; exit_status = int(not py_compile(\"/usr/bin/rfidtime.py\")); sys.exit(exit_status)' -q /usr/bin
+		python -c 'import sys, py_compile ; exit_status = int(not py_compile.compile("/usr/bin/rfidtime.py")); sys.exit(exit_status)' -q /usr/bin
 
 		;;
 
