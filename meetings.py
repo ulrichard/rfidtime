@@ -11,13 +11,14 @@ print "connecting to the database"
 conn = pymssql.connect(
 	host = '192.168.111.10', 
 	user = 'sa', 
-	password = 'mydirtylittlesecret', 
+	password = 'nottgonnatell', 
 	database = 'Cubx', 
 	as_dict = True
 )
 
-userid = 6  # UlR
-kstid  = 14 # 500 Besprechnung
+userid =   6 # UlR
+aufid  = 259 # Borm PointLine Allgemein
+kstid  =  14 # 500 Besprechnung
 
 def add_meeting(meet_date, meet_start, meet_end):
 	print 'adding meeting %s  from %f to %f' % (meet_date, meet_start, meet_end)
@@ -25,7 +26,13 @@ def add_meeting(meet_date, meet_start, meet_end):
 	cur.execute('SELECT * FROM DZ_DATEN WHERE MITARBEITER_ID=%d AND DZ_DATUM=%s AND KOSTENSTELLEN_ID=%d AND DZ_BZ > %f AND DZ_EZ < %f', (userid, meet_date, kstid, meet_start - 0.05, meet_end + 0.05))
 	row = cur.fetchone()
 	if row:
-		print 'the meeting is already in the db'
+		if aufid == row['AUF_ID']:
+			print 'the meeting is already in the db'
+		else:
+			cur.execute('UPDATE DZ_DATEN SET AUF_ID=%d WHERE DZ_DATEN_ID=%d', (aufid, row['DZ_DATEN_ID']))
+			print 'changed AUF_ID of record %d' % row['DZ_DATEN_ID']
+#		conn.rollback()  # for testing
+		conn.commit()
 		return
 
 	cur.execute('SELECT * FROM DZ_DATEN WHERE MITARBEITER_ID=%d AND DZ_DATUM=%s ORDER BY DZ_BZ ASC', (userid, meet_date))
@@ -83,6 +90,8 @@ add_meeting('2012-04-02', 10.50, 12.63)
 add_meeting('2012-04-10', 11.00, 11.30)
 add_meeting('2012-04-16', 14.35, 14.80)
 add_meeting('2012-04-23', 14.00, 14.50)
+add_meeting('2012-04-30', 10.37, 10.85)
+add_meeting('2012-05-07', 11.05, 11.30)
 
 conn.close()
 
