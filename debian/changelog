@@ -1,3 +1,9 @@
+rfidtime (0.0.17) squeeze; urgency=low
+
+  * added a meetings.py script
+
+ -- Richard Ulrich <richi@paraeasy.ch>  Fri, 11 May 2012 22:43:00 +0100
+
 rfidtime (0.0.16) squeeze; urgency=low
 
   * splitting the start-stop-scripts
