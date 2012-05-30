@@ -11,7 +11,7 @@ print "connecting to the database"
 conn = pymssql.connect(
 	host = '192.168.111.10', 
 	user = 'sa', 
-	password = 'guesswhat', 
+	password = 'default11$', 
 	database = 'Cubx', 
 	as_dict = True
 )
@@ -94,6 +94,7 @@ add_meeting('2012-04-30', 10.37, 10.85)
 add_meeting('2012-05-07', 11.05, 11.30)
 add_meeting('2012-05-11', 14.80, 16.75)
 add_meeting('2012-05-15', 11.20, 11.45)
+add_meeting('2012-05-30', 11.20, 12.40)
 
 conn.close()
 
