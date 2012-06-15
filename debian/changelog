@@ -1,8 +1,14 @@
-rfidtime (0.0.19) squeeze; urgency=low
+rfidtime (0.0.22) squeeze; urgency=low
+
+  *  dapted to new requirements from the packages in ubuntu precise
+
+ -- Richard Ulrich <richi@paraeasy.ch>  Thu, 14 Jun 2012 20:55:00 +0200
+
+rfidtime (0.0.20) squeeze; urgency=low
 
   * added a meetings.py script
 
- -- Richard Ulrich <richi@paraeasy.ch>  Fri, 8 Jun 2012 16:55:00 +0200
+ -- Richard Ulrich <richi@paraeasy.ch>  Mon, 11 Jun 2012 16:55:00 +0200
 
 rfidtime (0.0.16) squeeze; urgency=low
 

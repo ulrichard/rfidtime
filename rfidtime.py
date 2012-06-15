@@ -38,7 +38,7 @@ def main(config, opts):
 
 	# if a userid was provided at the commandline, handle it and exit
 	if configval.get('userid'):
-		open_or_close_time_record(conn, int(configval.get('userid')), configval.get('writetodb'))
+		open_or_close_time_record(conn, int(configval.get('userid')), configval)
 		conn.close()
 		exit()
 
@@ -64,6 +64,8 @@ def main(config, opts):
 			serin = ser.read(1)
 			rfidtag += "%02X" % ord(serin)
 		rfidtag = rfidtag[:10]
+		print "************************************************"
+		print time.localtime()
 		print "we have an rfid tag: " + rfidtag
 
 		# the mapping from rfid tag to userid would better be done in the database, but for now, the cfg file is ok
@@ -105,7 +107,7 @@ def open_or_close_time_record(dbconn, userid, configval):
 		if row['DZ_EZ'] is None and date.today() == row['DZ_DATUM'].date():
 			# just close the current record
 			print "closing record " + str(row['DZ_DATEN_ID'])
-			cur.execute('UPDATE DZ_DATEN SET DZ_EZ=%f, DZ_IST=%f WHERE DZ_DATEN_ID=%d', (industrynow, industrynow - row['DZ_BZ'], row['DZ_DATEN_ID']))
+			cur.execute('UPDATE DZ_DATEN SET DZ_EZ=%f, DZ_IST=%f WHERE DZ_DATEN_ID=%d' % (industrynow, industrynow - row['DZ_BZ'], row['DZ_DATEN_ID']))
 			if configval.get('useBlinkM'):
 				light_bulb('green')
 			if configval.get('useBeep'):
@@ -117,7 +119,7 @@ def open_or_close_time_record(dbconn, userid, configval):
 			print "The last record is closed. Creating a new record."
 			cur.execute('INSERT INTO DZ_DATEN '
 				'(MITARBEITER_ID, AUF_ID, KOSTENSTELLEN_ID, DZ_TAET_ID, DZ_DATUM, ZM_ID, DZ_BZ, EROEFFNUNGSDATUM, OPEN_USER, AENDERUNGSDATUM, CURRENTUSER) VALUES '
-				'(%d, %d, %d, %d, %s, %d, %f, GETDATE(), %s, GETDATE(), %s)', 
+				'(%d, %d, %d, %d, \"%s\", %d, %f, GETDATE(), \"%s\", GETDATE(), \"%s\")' % 
 				(row['MITARBEITER_ID'], row['AUF_ID'], row['KOSTENSTELLEN_ID'], row['DZ_TAET_ID'], date.today().isoformat(), row['ZM_ID'], industrynow, row['OPEN_USER'], row['CURRENTUSER']))
 			if configval.get('useBlinkM'):
 				light_bulb('blue')
