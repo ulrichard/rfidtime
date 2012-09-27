@@ -27,8 +27,6 @@ case "$1" in
 		modprobe i2c-gpio-custom bus0=0,11,13
 		modprobe i2c-dev
 
-		update-rc.d -f rfidtime-bifferboard defaults
-
 		;;
 
 	abort-upgrade)

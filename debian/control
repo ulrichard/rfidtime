@@ -2,26 +2,26 @@ Source: rfidtime
 Section: web
 Priority: optional
 Maintainer: Richard Ulrich <richi@paraeasy.ch>
-Build-Depends: 
-standards-Version: 3.8.1.0
-Homepage: http://sourceforge.net/projects/flightpred
+Build-Depends: python, debhelper
+standards-Version: 3.9.3
+Homepage: 
 
 Package: rfidtime-base
 Architecture: all
 Essential: no
-Depends: ${misc:Depends}, python-pymssql, python-serial, python-daemon, python-configglue (>= 1.0), python-configobj, ntp, beep
+Depends: ${misc:Depends}, ${python:Depends}, python-pymssql, python-serial, python-daemon, python-configglue (>= 1.0), python-configobj, ntp, beep
 Description: Logs your time in the BORM ERP system with an rfid tag reader. Base package.
 
 Package: rfidtime-bifferboard
 Conflicts: rfidtime-alix
 Architecture: all
 Essential: no
-Depends: ${misc:Depends}, rfidtime-base, python-smbus, i2c-tools
+Depends: ${misc:Depends}, ${python:Depends}, rfidtime-base (= ${binary:Version}), python-smbus, i2c-tools
 Description: Logs your time in the BORM ERP system with an rfid tag reader. Package for Bifferboard with signalling on a BlinkM through i2c.
 
 Package: rfidtime-alix
 Conflicts: rfidtime-bifferboard
 Architecture: all
 Essential: no
-Depends: ${misc:Depends}, rfidtime-base, festival
+Depends: ${misc:Depends}, ${python:Depends}, rfidtime-base (= ${binary:Version}), festival
 Description: Logs your time in the BORM ERP system with an rfid tag reader. Package for an Alix with signalling on the beeper.

@@ -1,3 +1,9 @@
+rfidtime (0.0.23~precise) precise; urgency=low
+
+  * simplified the packaging
+
+ -- Richard Ulrich <richi@paraeasy.ch>  Thu, 27 Sep 2012 21:51:42 +0200
+
 rfidtime (0.0.22) squeeze; urgency=low
 
   *  dapted to new requirements from the packages in ubuntu precise

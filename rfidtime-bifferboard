@@ -2,7 +2,7 @@
 # inspired by:  http://jimmyg.org/blog/2010/python-daemon-init-script.html
 
 DAEMON=/usr/bin/python
-ARGS="/usr/bin/rfidtime.py serve"
+ARGS="/usr/bin/rfidtime serve"
 PIDFILE=/var/rfidtime.pid
 
 case "$1" in
