@@ -8,7 +8,7 @@ import configglue
 from configobj import ConfigObj
 
 
-userid = 6 # UlR
+userid =   6 # UlR
 aufid  = 259 # Borm PointLine Allgemein
 kstid  =  14 # 500 Besprechnung
 
@@ -29,6 +29,7 @@ def main(config, opts):
         	userid = userconfig['user']
 
         # add the meeting times here
+        add_meeting(conn, '2012-12-11', 10.00, 11.50)
         add_meeting(conn, '2012-12-13', 09.00, 09.50)
 
 	conn.close()
