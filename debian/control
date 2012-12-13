@@ -2,14 +2,14 @@ Source: rfidtime
 Section: web
 Priority: optional
 Maintainer: Richard Ulrich <richi@paraeasy.ch>
-Build-Depends: python, debhelper
+Build-Depends: python, debhelper (>= 9.0.0)
 standards-Version: 3.9.3
 Homepage: 
 
 Package: rfidtime-base
 Architecture: all
 Essential: no
-Depends: ${misc:Depends}, ${python:Depends}, python-pymssql, python-serial, python-daemon, python-configglue (>= 1.0), python-configobj, ntp, beep
+Depends: ${misc:Depends}, ${python:Depends}, python-pymssql, python-serial, python-daemon, python-configobj, ntp, beep #python-configglue (>= 1.0)
 Description: Logs your time in the BORM ERP system with an rfid tag reader. Base package.
 
 Package: rfidtime-bifferboard

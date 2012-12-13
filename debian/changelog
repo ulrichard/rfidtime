@@ -1,3 +1,9 @@
+rfidtime (0.0.24~quantal) quantal; urgency=low
+
+  * got it running again on the bifferboar
+
+ -- Richard Ulrich <richi@paraeasy.ch>  Thu, 13 Dec 2012 22:32:33 +0100
+
 rfidtime (0.0.23~precise) precise; urgency=low
 
   * simplified the packaging

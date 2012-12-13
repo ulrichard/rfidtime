@@ -119,7 +119,7 @@ def open_or_close_time_record(dbconn, userid, configval):
 			print "The last record is closed. Creating a new record."
 			cur.execute('INSERT INTO DZ_DATEN '
 				'(MITARBEITER_ID, AUF_ID, KOSTENSTELLEN_ID, DZ_TAET_ID, DZ_DATUM, ZM_ID, DZ_BZ, EROEFFNUNGSDATUM, OPEN_USER, AENDERUNGSDATUM, CURRENTUSER) VALUES '
-				'(%d, %d, %d, %d, \"%s\", %d, %f, GETDATE(), \"%s\", GETDATE(), \"%s\")' % 
+				'(%d, %d, %d, %d, %s, %d, %f, GETDATE(), %s, GETDATE(), %s)', 
 				(row['MITARBEITER_ID'], row['AUF_ID'], row['KOSTENSTELLEN_ID'], row['DZ_TAET_ID'], date.today().isoformat(), row['ZM_ID'], industrynow, row['OPEN_USER'], row['CURRENTUSER']))
 			if configval.get('useBlinkM'):
 				light_bulb('blue')
