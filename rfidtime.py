@@ -11,10 +11,10 @@ from datetime import date
 import time
 from configobj import ConfigObj
 import os
+import smbus
 
 #with daemon.DaemonContext():
 #    do_main_program()
-
 
 
 def main(config, opts):
@@ -22,9 +22,13 @@ def main(config, opts):
 
 	# stop the annoying default program of the blinkM
 	if configval.get('useBlinkM'):
-		os.system('i2cset -y 0 0x09 0 0x6F'); # 'o' -> stop script
-		os.system('i2cset -y 0 0x09 0 0x006E w');
-		os.system('i2cset -y 0 0x09 0 0x0000 w');
+		i2c = smbus.SMBus(0)
+		i2c.write_byte(0x09, 0x6f) # 'o' -> stop script
+		#dark
+		i2c.write_byte(0x09, 0x6e)
+		i2c.write_byte(0x09, 0x00)
+		i2c.write_byte(0x09, 0x00)
+		i2c.write_byte(0x09, 0x00)
 
 	# connect to the database
 	print "connecting to the database"
@@ -65,7 +69,7 @@ def main(config, opts):
 			rfidtag += "%02X" % ord(serin)
 		rfidtag = rfidtag[:10]
 		print "************************************************"
-		print time.localtime()
+		print time.strftime('%x %X')
 		print "we have an rfid tag: " + rfidtag
 
 		# the mapping from rfid tag to userid would better be done in the database, but for now, the cfg file is ok
@@ -73,6 +77,8 @@ def main(config, opts):
 			print "Unknown rfid tag : " + rfidtag
 			if configval.get('useSpeech'):
 				os.system('echo "Unknown rfid tag" | festival --pipe --tts');
+			if configval.get('useBlinkM'):
+                       		light_bulb('red')
 			continue
 
 		userid = int(userconfig[rfidtag])
@@ -134,21 +140,28 @@ def open_or_close_time_record(dbconn, userid, configval):
 			dbconn.rollback()
 	
 def light_bulb(color):
-	# todo: communicate to a BlinkM multi color light bulb over i2c
-	print "light bulb " + color
-	
+	i2c = smbus.SMBus(0)
+
 	if(color == 'blue'):
-		os.system('i2cset -y 0 0x09 0 0x6E00 w');
-		os.system('i2cset -y 0 0x09 0 0xAA00 w');
+		i2c.write_byte(0x09, 0x6e)
+		i2c.write_byte(0x09, 0x00)
+		i2c.write_byte(0x09, 0x00)
+		i2c.write_byte(0x09, 0xff)
 	elif(color == 'green'):
-		os.system('i2cset -y 0 0x09 0 0x6E00 w');
-		os.system('i2cset -y 0 0x09 0 0x00AA w');
+		i2c.write_byte(0x09, 0x6e)
+		i2c.write_byte(0x09, 0x00)
+		i2c.write_byte(0x09, 0xff)
+		i2c.write_byte(0x09, 0x00)
 	else: # red
-		os.system('i2cset -y 0 0x09 0 0xAA6E w');
-		os.system('i2cset -y 0 0x09 0 0x0000 w');
+		i2c.write_byte(0x09, 0x6e)
+		i2c.write_byte(0x09, 0xff)
+		i2c.write_byte(0x09, 0x00)
+		i2c.write_byte(0x09, 0x00)
 	time.sleep(2.0);
-	os.system('i2cset -y 0 0x09 0 0x006E w');
-	os.system('i2cset -y 0 0x09 0 0x0000 w');
+	i2c.write_byte(0x09, 0x6e)
+	i2c.write_byte(0x09, 0x00)
+	i2c.write_byte(0x09, 0x00)
+	i2c.write_byte(0x09, 0x00)
 
 if __name__ == '__main__':
     from configglue import schema
@@ -179,6 +192,16 @@ if __name__ == '__main__':
 		writetodb = schema.BoolOption(
 		    default=False,
 		    help='Activate only after the script was approved by Mr. Schwindl.')
+		useBlinkM = schema.BoolOption(
+			default=False,
+			help='Activate visual feedback with a BlinkM connected to I2C bus 0.')
+		useBeep = schema.BoolOption(
+			default=False,
+			help='Activate audio feedback from the beeper.')
+		useSpeech = schema.BoolOption(
+			default=False,
+			help='Activate spoken feedback with the festival text to speech engine.')
+
 
     # glue everything together
     glue = configglue(MySchema, ['/etc/rfidtime.cfg'])
