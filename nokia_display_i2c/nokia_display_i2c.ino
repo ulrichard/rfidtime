@@ -60,7 +60,7 @@ void setup()
     Serial.begin(19200);  
     Serial.println("init");
     
-    Wire.begin(19); // join i2c bus with address #19
+    Wire.begin(0x19); // join i2c bus with address #0x19
     Wire.onReceive(receiveI2C); // register event
     
     SPI.begin();
