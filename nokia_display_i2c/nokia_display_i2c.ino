@@ -45,22 +45,12 @@
 // LCD reset       <- 14|    |15  -> LCD cmd/data                        +-------------+
 //                      +----+
 
-/*
- 
-   The following pins are used:
- *   13  spi sclk -> serial clock
- *   12  spi miso -> serial data from ... to arduino 
- *   11  spi mosi -> serial data from arduino to LCD
- *   10  spi ss   -> 
- *    9  LCD command or data 
- *    8  LCD reset      
- *    7  LCD chip select 
- */
 #include "nokia3310lcd.h"
 // std lib
 #include <Arduino.h>
 #include <SPI.h>
-#include <ctype.h>
+#include <Wire.h>
+//#include <ctype.h>
 
 
 Nokia3310LCD  disp(9, 8, 7);
@@ -70,26 +60,113 @@ void setup()
     Serial.begin(19200);  
     Serial.println("init");
     
+    Wire.begin(19); // join i2c bus with address #19
+    Wire.onReceive(receiveI2C); // register event
+    
     SPI.begin();
-    // set the spi clock to 125kHz
-    SPI.setClockDivider(128); // slowest -> try to decrease
+    SPI.setClockDivider(32); // 500 kHz
     
     disp.init();
     disp.LcdContrast(0x40);
     disp.LcdClear();
+    disp.LcdUpdate();
     
-    disp.LcdUpdate();
-    disp.LcdGotoXYFont(1, 1);
-    disp.LcdStr(Nokia3310LCD::FONT_1X, "This is some");
-    disp.LcdGotoXYFont(1, 3);
-    disp.LcdStr(Nokia3310LCD::FONT_2X, "big");
-    disp.LcdGotoXYFont(1, 4);
-    disp.LcdStr(Nokia3310LCD::FONT_1X, "Text.");
-    disp.LcdUpdate();
+    ShowStartupScreen();
 }
+
+// function that executes whenever data is received from master
+// this function is registered as an event, see setup()
+void receiveI2C(int howMany)
+{
+    const uint8_t cmd = Wire.read();
+    
+    switch(cmd)
+    {
+        case 0xA1: // change the i2c address -> not yet supported
+            break;
+        case 0xB0: // sets all pixels to white
+            disp.LcdClear();
+            break;
+        case 0xB1: // send buffer to the LCD
+            disp.LcdUpdate();
+            break;
+        case 0xB2: // adjust the contrast. max is 0x7F
+        {
+            const uint8_t val = Wire.read();
+            disp.LcdContrast(val);
+            break;
+        }
+        case 0xB3: // write text at a given position
+        {
+            const uint8_t xpos = Wire.read();
+            const uint8_t ypos = Wire.read();
+            disp.LcdGotoXYFont(xpos, ypos);
+            const uint8_t large = Wire.read();
+            const Nokia3310LCD::LcdFontSize fontSize = large ? Nokia3310LCD::FONT_2X : Nokia3310LCD::FONT_1X;
+            char text[32];
+            const uint8_t txtLen = Wire.read();
+            for(uint8_t i=0, j=0; i<txtLen && i<31 && j<2048; ++j)
+                if(Wire.available() > 0)
+                  text[i++] = Wire.read();
+            text[min(txtLen, 31)] = '\0';
+            disp.LcdStr(fontSize, text);
+            break;
+        }
+        case 0xB4: // set a single pixel : 0:white  1:black  2:xor
+        {
+            const uint8_t xpos = Wire.read();
+            const uint8_t ypos = Wire.read();
+            const uint8_t val  = Wire.read();
+            disp.LcdPixel(xpos, ypos, val == 1 ? Nokia3310LCD::PIXEL_ON : val == 2 ? Nokia3310LCD::PIXEL_XOR : Nokia3310LCD::PIXEL_OFF);
+            break;
+        }
+        case 0xB5: // line
+        {
+            const uint8_t x1  = Wire.read();
+            const uint8_t y1  = Wire.read();
+            const uint8_t x2  = Wire.read();
+            const uint8_t y2  = Wire.read();
+            const uint8_t val = Wire.read();
+            disp.LcdLine(x1, x2, y1, y2, val == 1 ? Nokia3310LCD::PIXEL_ON : val == 2 ? Nokia3310LCD::PIXEL_XOR : Nokia3310LCD::PIXEL_OFF);
+            break;
+        }
+    }
+    
+    
+  while(1 < Wire.available()) // loop through all but the last
+  {
+    char c = Wire.read(); // receive byte as a character
+    Serial.print(c);         // print the character
+  }
+  int x = Wire.read();    // receive byte as an integer
+  Serial.println(x);         // print the integer
+}
+
 
 void loop()                     
 {    
-    
+    delay(100);
+}
+
+void ShowStartupScreen()
+{
+    disp.LcdGotoXYFont(1, 1);
+    disp.LcdStr(Nokia3310LCD::FONT_1X, "Borm ERP");
+    disp.LcdGotoXYFont(1, 3);
+    disp.LcdStr(Nokia3310LCD::FONT_2X, "rfid");
+    disp.LcdGotoXYFont(6, 5);
+    disp.LcdStr(Nokia3310LCD::FONT_2X, "time");
+    disp.LcdGotoXYFont(1, 6);
+    disp.LcdStr(Nokia3310LCD::FONT_1X, "@cubx");
+    disp.LcdLine(60, 60,  5, 20, Nokia3310LCD::PIXEL_ON);
+    disp.LcdLine(60, 75,  5,  0, Nokia3310LCD::PIXEL_ON);
+    disp.LcdLine(60, 65,  5, 10, Nokia3310LCD::PIXEL_ON);
+    disp.LcdLine(60, 65, 20, 25, Nokia3310LCD::PIXEL_ON);
+    disp.LcdLine(65, 80, 25, 20, Nokia3310LCD::PIXEL_ON);
+    disp.LcdLine(65, 80, 10,  5, Nokia3310LCD::PIXEL_ON);
+    disp.LcdLine(80, 80,  5, 20, Nokia3310LCD::PIXEL_ON);
+    disp.LcdLine(65, 65, 10, 25, Nokia3310LCD::PIXEL_ON);
+    disp.LcdLine(75, 80,  0,  5, Nokia3310LCD::PIXEL_ON);
+    disp.LcdUpdate();
 }
 
