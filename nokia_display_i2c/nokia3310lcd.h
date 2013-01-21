@@ -20,7 +20,6 @@
 #ifndef _NOKIA3310LCD_H_
 #define _NOKIA3310LCD_H_
 
-#include "Spi.h"
 #include <avr/pgmspace.h>
 #include <stdint.h>
 

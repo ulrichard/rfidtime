@@ -11,6 +11,7 @@
 #include "nokia3310lcd.h"
 // arduino
 #include <Arduino.h>
+#include <SPI.h>
 // stdlib
 #include <stdio.h>
 //#include <avr/io.h>
@@ -38,14 +39,10 @@ void Nokia3310LCD::init()
 
     // Pull-up on reset pin.
     digitalWrite(pinReset_, HIGH);
-    delay(500);
+    delay(200);
     digitalWrite(pinReset_, LOW);
-    delay(500);
+    delay(200);
     digitalWrite(pinReset_, HIGH);
-
-    Spi.init();
-    // set the spi clock to 125kHz
-    Spi.mode((1 << SPR0) | (1 << SPR1));
 
     // Disable LCD controller
     digitalWrite(pinChipSel_, HIGH);
@@ -480,7 +477,7 @@ void Nokia3310LCD::LcdSend(uint8_t data, LcdCmdData cd)
     digitalWrite(pinCmdDtaSw_, cd == LCD_DATA);
 
     //  Send data to display controller.
-    Spi.transfer(data);
+    SPI.transfer(data);
 
     // Disable display controller.
     digitalWrite(pinChipSel_, HIGH);

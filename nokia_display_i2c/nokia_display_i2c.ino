@@ -57,8 +57,9 @@
  *    7  LCD chip select 
  */
 #include "nokia3310lcd.h"
-#include <SPI.h>
 // std lib
+#include <Arduino.h>
+#include <SPI.h>
 #include <ctype.h>
 
 
@@ -69,12 +70,12 @@ void setup()
     Serial.begin(19200);  
     Serial.println("init");
     
-    
-//    Spi.init();
-//    Spi.mode((1 << SPR0) | (1 << SPR1));  // set the spi clock to 125kHz
+    SPI.begin();
+    // set the spi clock to 125kHz
+    SPI.setClockDivider(128); // slowest -> try to decrease
     
     disp.init();
-	disp.LcdContrast(0x40);
+    disp.LcdContrast(0x40);
     disp.LcdClear();
     
     disp.LcdUpdate();
