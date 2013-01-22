@@ -29,21 +29,23 @@
 //                              +----+
 //
 //                      +-\/-+
-//                RST  1|    |28 <-  SCL
+//              RST -> 1|    |28 <-  SCL
 //         uart RXD -> 2|    |27 <-> SDA
 //         uart TXD <- 3|    |26
-//                     4|    |25
-//      LED red    <-  5|    |24                                         +-------------+
-//                     6|    |23                               reset ->  |             |
-//                VCC  7|    |22  GND                    chip enable ->  |             |
-//                GND  8|    |21                            cmd/data ->  |    5110     |
-//             quartz  9|    |20  VCC                           MOSI ->  |   nokia     |
-//             quartz 10|    |19  -> SCK                         SCK ->  |    LCD      |
-//      LED green  <- 11|    |18  <- MISO                        VCC ->  |             |
-//      LED blue   <- 12|    |17  -> MOSI                  backlight ->  |             |
-// LCD chip select <- 13|    |16  <- SS                          GND ->  |             | 
-// LCD reset       <- 14|    |15  -> LCD cmd/data                        +-------------+
-//                      +----+
+//                     4|    |25                                         
+//      LED red    <-  5|    |24                          nokia 5110 LCD
+//                     6|    |23 -> backlight --+        +--------------+
+//                VCC  7|    |22  GND ----------|--------|        GND ->|
+//                GND  8|    |21                +--------|  backlight ->|
+//             quartz  9|    |20  VCC     ---------------|        VCC ->|
+//             quartz 10|    |19  -> SCK  ---------------|        SCK ->|
+//      LED green  <- 11|    |18  <- MISO    +-----------|       MOSI ->|
+//      LED blue   <- 12|    |17  -> MOSI ---+     +-----|   cmd/data ->|
+// LCD chip select <- 13|    |16  <- SS            | +---|chip enable ->|
+// LCD reset |   +-<- 14|    |15  -> LCD cmd/data -+ | +-|      reset ->|
+//           |   |      +----+                       | | +--------------+
+//           +---|-----------------------------------+ |
+//               +-------------------------------------+   
 
 #include "nokia3310lcd.h"
 // std lib
