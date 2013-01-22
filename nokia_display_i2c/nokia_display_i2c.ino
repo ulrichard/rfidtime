@@ -59,8 +59,8 @@ Nokia3310LCD  disp(9, 8, 7);
 
 void setup()   
 {      
-    Serial.begin(19200);  
-    Serial.println("init");
+//    Serial.begin(19200);  
+//    Serial.println("init");
     
     Wire.begin(0x19); // join i2c bus with address #0x19
     Wire.onReceive(receiveI2C); // register event
@@ -76,8 +76,14 @@ void setup()
     ShowStartupScreen();
 }
 
-// function that executes whenever data is received from master
-// this function is registered as an event, see setup()
+void loop()                     
+{
+//    if(Wire.available() > 0)
+//        receiveI2C(1);
+    
+    delay(5);
+}
+
 void receiveI2C(int howMany)
 {
     const uint8_t cmd = Wire.read();
@@ -94,19 +100,19 @@ void receiveI2C(int howMany)
             break;
         case 0xB2: // adjust the contrast. max is 0x7F
         {
-            const uint8_t val = Wire.read();
+            const uint8_t val = GetNextI2cByte();
             disp.LcdContrast(val);
             break;
         }
         case 0xB3: // write text at a given position
         {
-            const uint8_t xpos = Wire.read();
-            const uint8_t ypos = Wire.read();
+            const uint8_t xpos = GetNextI2cByte();
+            const uint8_t ypos = GetNextI2cByte();
             disp.LcdGotoXYFont(xpos, ypos);
-            const uint8_t large = Wire.read();
+            const uint8_t large = GetNextI2cByte();
             const Nokia3310LCD::LcdFontSize fontSize = large ? Nokia3310LCD::FONT_2X : Nokia3310LCD::FONT_1X;
             char text[32];
-            const uint8_t txtLen = Wire.read();
+            const uint8_t txtLen = GetNextI2cByte();
             for(uint8_t i=0, j=0; i<txtLen && i<31 && j<2048; ++j)
                 if(Wire.available() > 0)
                   text[i++] = Wire.read();
@@ -116,38 +122,46 @@ void receiveI2C(int howMany)
         }
         case 0xB4: // set a single pixel : 0:white  1:black  2:xor
         {
-            const uint8_t xpos = Wire.read();
-            const uint8_t ypos = Wire.read();
-            const uint8_t val  = Wire.read();
+            const uint8_t xpos = GetNextI2cByte();
+            const uint8_t ypos = GetNextI2cByte();
+            const uint8_t val  = GetNextI2cByte();
             disp.LcdPixel(xpos, ypos, val == 1 ? Nokia3310LCD::PIXEL_ON : val == 2 ? Nokia3310LCD::PIXEL_XOR : Nokia3310LCD::PIXEL_OFF);
             break;
         }
         case 0xB5: // line
         {
-            const uint8_t x1  = Wire.read();
-            const uint8_t y1  = Wire.read();
-            const uint8_t x2  = Wire.read();
-            const uint8_t y2  = Wire.read();
-            const uint8_t val = Wire.read();
+            const uint8_t x1  = GetNextI2cByte();
+            const uint8_t y1  = GetNextI2cByte();
+            const uint8_t x2  = GetNextI2cByte();
+            const uint8_t y2  = GetNextI2cByte();
+            const uint8_t val = GetNextI2cByte();
             disp.LcdLine(x1, x2, y1, y2, val == 1 ? Nokia3310LCD::PIXEL_ON : val == 2 ? Nokia3310LCD::PIXEL_XOR : Nokia3310LCD::PIXEL_OFF);
             break;
         }
+        case 0xB6: // startup screen
+            ShowStartupScreen();
+            break;
     }
     
-    
+/*    
   while(1 < Wire.available()) // loop through all but the last
   {
     char c = Wire.read(); // receive byte as a character
-    Serial.print(c);         // print the character
+//    Serial.print(c);         // print the character
   }
   int x = Wire.read();    // receive byte as an integer
-  Serial.println(x);         // print the integer
+//  Serial.println(x);         // print the integer
+*/
 }
 
-
-void loop()                     
-{    
-    delay(100);
+uint8_t GetNextI2cByte()
+{
+    for(uint8_t j=0;  j<1024; ++j)
+        if(Wire.available() > 0)
+            return Wire.read();
+        else
+            delay(2);
+    return 0x00;
 }
 
 void ShowStartupScreen()
@@ -160,15 +174,15 @@ void ShowStartupScreen()
     disp.LcdStr(Nokia3310LCD::FONT_2X, "time");
     disp.LcdGotoXYFont(1, 6);
     disp.LcdStr(Nokia3310LCD::FONT_1X, "@cubx");
-    disp.LcdLine(60, 60,  5, 20, Nokia3310LCD::PIXEL_ON);
-    disp.LcdLine(60, 75,  5,  0, Nokia3310LCD::PIXEL_ON);
+    disp.LcdLine(60, 60,  5, 16, Nokia3310LCD::PIXEL_ON);
+    disp.LcdLine(60, 71,  5,  2, Nokia3310LCD::PIXEL_ON);
     disp.LcdLine(60, 65,  5, 10, Nokia3310LCD::PIXEL_ON);
-    disp.LcdLine(60, 65, 20, 25, Nokia3310LCD::PIXEL_ON);
-    disp.LcdLine(65, 80, 25, 20, Nokia3310LCD::PIXEL_ON);
-    disp.LcdLine(65, 80, 10,  5, Nokia3310LCD::PIXEL_ON);
-    disp.LcdLine(80, 80,  5, 20, Nokia3310LCD::PIXEL_ON);
-    disp.LcdLine(65, 65, 10, 25, Nokia3310LCD::PIXEL_ON);
-    disp.LcdLine(75, 80,  0,  5, Nokia3310LCD::PIXEL_ON);
+    disp.LcdLine(60, 65, 16, 21, Nokia3310LCD::PIXEL_ON);
+    disp.LcdLine(65, 76, 21, 18, Nokia3310LCD::PIXEL_ON);
+    disp.LcdLine(65, 76, 10,  7, Nokia3310LCD::PIXEL_ON);
+    disp.LcdLine(76, 76,  7, 18, Nokia3310LCD::PIXEL_ON);
+    disp.LcdLine(65, 65, 10, 21, Nokia3310LCD::PIXEL_ON);
+    disp.LcdLine(71, 76,  2,  7, Nokia3310LCD::PIXEL_ON);
     disp.LcdUpdate();
 }
 
