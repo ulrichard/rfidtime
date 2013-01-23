@@ -29,8 +29,10 @@ def main(config, opts):
         	userid = userconfig['user']
 
         # add the meeting times here
-        add_meeting(conn, '2012-12-11', 10.00, 11.50)
-        add_meeting(conn, '2012-12-13', 09.00, 09.50)
+#        add_meeting(conn, '2012-12-11', 10.00, 11.50)
+#        add_meeting(conn, '2012-12-13', 09.00, 09.50)
+        add_meeting(conn, '2013-01-23', 10.20, 12.25) # scrum 
+        add_meeting(conn, '2013-01-23', 12.75, 14.00) # scrum 
 
 	conn.close()
 
