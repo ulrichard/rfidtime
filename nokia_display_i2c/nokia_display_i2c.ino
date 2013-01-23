@@ -29,14 +29,14 @@
 //                              +----+
 //
 //                      +-\/-+
-//              RST -> 1|    |28 <-  SCL
-//         uart RXD -> 2|    |27 <-> SDA
-//         uart TXD <- 3|    |26
-//                     4|    |25                                         
-//      LED red    <-  5|    |24                          nokia 5110 LCD
-//                     6|    |23 -> backlight --+        +--------------+
-//                VCC  7|    |22  GND ----------|--------|        GND ->|
-//                GND  8|    |21                +--------|  backlight ->|
+//              RST -> 1|    |28 <-  SCL  -------------- C
+//         uart RXD -> 2|    |27 <-> SDA  -------------- D
+//         uart TXD <- 3|    |26                   +---- V
+//                     4|    |25                   |  +- G                    
+//      LED red    <-  5|    |24                   |  |   nokia 5110 LCD
+//                     6|    |23 -> backlight --+  |  |  +--------------+
+//                VCC  7|    |22  GND ----------|--|--+--|        GND ->|
+//                GND  8|    |21                +--+-----|  backlight ->|
 //             quartz  9|    |20  VCC     ---------------|        VCC ->|
 //             quartz 10|    |19  -> SCK  ---------------|        SCK ->|
 //      LED green  <- 11|    |18  <- MISO    +-----------|       MOSI ->|
@@ -56,11 +56,27 @@
 
 
 Nokia3310LCD  disp(9, 8, 7);
+const uint8_t LCD_BACKLIGHT = A0;
+const uint8_t LED_RED   = 3;
+const uint8_t LED_GREEN = 5;
+const uint8_t LED_BLUE  = 6;
+const uint8_t PIEZO_BUZZER = 4;
+
 
 void setup()   
 {      
 //    Serial.begin(19200);  
 //    Serial.println("init");
+
+    pinMode(LCD_BACKLIGHT, OUTPUT);
+    digitalWrite(LCD_BACKLIGHT, LOW);
+    pinMode(LED_RED,   OUTPUT);
+    pinMode(LED_GREEN, OUTPUT);
+    pinMode(LED_BLUE,  OUTPUT);
+    digitalWrite(LED_RED,   HIGH);
+    digitalWrite(LED_GREEN, HIGH);
+    digitalWrite(LED_BLUE,  HIGH);
+    pinMode(PIEZO_BUZZER, OUTPUT);
     
     Wire.begin(0x19); // join i2c bus with address #0x19
     Wire.onReceive(receiveI2C); // register event
@@ -80,8 +96,23 @@ void loop()
 {
 //    if(Wire.available() > 0)
 //        receiveI2C(1);
-    
-    delay(5);
+/*
+    digitalWrite(LED_RED,   LOW);
+    delay(100);
+    digitalWrite(LED_RED,   HIGH);
+    delay(100);
+    digitalWrite(LED_GREEN, LOW);
+    delay(100);
+    digitalWrite(LED_GREEN, HIGH);
+    delay(100);
+    digitalWrite(LED_BLUE,  LOW);
+    delay(100);
+    digitalWrite(LED_BLUE,  HIGH);
+    delay(100);
+    digitalWrite(LCD_BACKLIGHT, HIGH);
+    delay(100);
+    digitalWrite(LCD_BACKLIGHT, LOW);
+*/    
 }
 
 void receiveI2C(int howMany)
@@ -141,6 +172,33 @@ void receiveI2C(int howMany)
         case 0xB6: // startup screen
             ShowStartupScreen();
             break;
+        case 0xC1: // backlight on
+            digitalWrite(LCD_BACKLIGHT, HIGH);
+            break;
+        case 0xC2: // backlight off
+            digitalWrite(LCD_BACKLIGHT, LOW);
+            break;
+        case 0xC3: // red led brightness
+        {
+            const uint8_t val = GetNextI2cByte();
+            analogWrite(LED_RED, val);
+        }
+        case 0xC4: // green led brightness
+        {
+            const uint8_t val = GetNextI2cByte();
+            analogWrite(LED_GREEN, val);
+        }
+        case 0xC5: // blue led brightness
+        {
+            const uint8_t val = GetNextI2cByte();
+            analogWrite(LED_BLUE, val);
+        }
+        case 0xCA: // play a tone on the piezo buzzer
+        {
+            const uint16_t frequ = GetNextI2cByte() << 8 + GetNextI2cByte();
+            const uint16_t dur   = GetNextI2cByte() << 8 + GetNextI2cByte();
+            tone(PIEZO_BUZZER, frequ, dur);
+        }
     }
     
 /*    

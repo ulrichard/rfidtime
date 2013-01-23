@@ -37,13 +37,39 @@ class NokiaDisplay:
 		self.i2c.write_byte(self.i2cSlaveAddr, ypos)
 		self.i2c.write_byte(self.i2cSlaveAddr, val)
 
-	def LineOut(self, x1, y1, x2, y2, val = 1): # set a single pixel : 0:white  1:black  2:xor
+	def LineOut(self, x1, y1, x2, y2, val = 1): # draw a line -> val : 0:white  1:black  2:xor
 		self.i2c.write_byte(self.i2cSlaveAddr, 0xB5)
 		self.i2c.write_byte(self.i2cSlaveAddr, x1)
 		self.i2c.write_byte(self.i2cSlaveAddr, y1)
 		self.i2c.write_byte(self.i2cSlaveAddr, x2)
 		self.i2c.write_byte(self.i2cSlaveAddr, y2)
 		self.i2c.write_byte(self.i2cSlaveAddr, val)
+
+	def StartScreen(self):                     # show the start screen
+		self.i2c.write_byte(self.i2cSlaveAddr, 0xB6)
+
+	def Backlight(self, Enable): # draw a line -> val : 0:white  1:black  2:xor
+		if Enable:
+			self.i2c.write_byte(self.i2cSlaveAddr, 0xC1)
+		else:
+			self.i2c.write_byte(self.i2cSlaveAddr, 0xC2)
+
+	def LedRed(self, val): # set the brightness of the red LED -> 0-255
+		self.i2c.write_byte(self.i2cSlaveAddr, 0xC3)
+		self.i2c.write_byte(self.i2cSlaveAddr, val)
+
+	def LedGreen(self, val): # set the brightness of the green LED -> 0-255
+		self.i2c.write_byte(self.i2cSlaveAddr, 0xC4)
+		self.i2c.write_byte(self.i2cSlaveAddr, val)
+
+	def LedBlue(self, val): # set the brightness of the blue LED -> 0-255
+		self.i2c.write_byte(self.i2cSlaveAddr, 0xC5)
+		self.i2c.write_byte(self.i2cSlaveAddr, val)
+
+	def PlayTone(self, frequency, duration): # play a tone on the piezzo buzzer
+		self.i2c.write_byte(self.i2cSlaveAddr, 0xCA)
+		self.i2c.write_word(self.i2cSlaveAddr, frequency)
+		self.i2c.write_word(self.i2cSlaveAddr, duration)
 
 	def __repr__(self):
 		print "atmega interfacing a nokia display at i2c address %d" % self.i2cSlaveAddr
