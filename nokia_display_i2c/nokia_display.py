@@ -78,11 +78,18 @@ class NokiaDisplay:
 
 # Main program
 if __name__ == "__main__":
-	disp = NokiaDisplay(0x13, 1) # bus is 0 on the alix, and 1 on the raspberrypi
+	disp = NokiaDisplay(0x19, 1) # bus is 0 on the alix, and 1 on the raspbe
+	disp.Backlight(True)
 	disp.ClearDisplay()
-	disp.LineOut(5, 5, 70, 20, 1)
-	disp.TextOut(5, 5, "Hello World")
 	disp.UpdateDisplay()
-	
+	time.sleep(1.0)
+	disp.StartScreen()
+	time.sleep(1.0)
+	disp.ClearDisplay()
+	disp.UpdateDisplay()
+	disp.SetContrast(50)
+#	disp.LineOut(5, 5, 70, 20, 1)
+#	disp.TextOut(5, 5, "Hello World")
+	disp.UpdateDisplay()	
 
 
