@@ -52,7 +52,6 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <Wire.h>
-//#include <ctype.h>
 
 
 Nokia3310LCD  disp(9, 8, 7);
@@ -62,9 +61,15 @@ const uint8_t LED_GREEN = 5;
 const uint8_t LED_BLUE  = 6;
 const uint8_t PIEZO_BUZZER = 4;
 
+uint8_t recvBuffer[32];
+uint8_t recvPos;
+unsigned long recvLast;
 
 void setup()   
-{      
+{
+    recvPos = 0;
+    recvLast = millis();
+    
 //    Serial.begin(19200);  
 //    Serial.println("init");
 
@@ -85,41 +90,27 @@ void setup()
     SPI.setClockDivider(32); // 500 kHz
     
     disp.init();
-    disp.LcdContrast(0x40);
-    disp.LcdClear();
-    disp.LcdUpdate();
-    
+    disp.LcdContrast(0x40);   
     ShowStartupScreen();
 }
 
 void loop()                     
 {
-//    if(Wire.available() > 0)
-//        receiveI2C(1);
-/*
-    digitalWrite(LED_RED,   LOW);
-    delay(100);
-    digitalWrite(LED_RED,   HIGH);
-    delay(100);
-    digitalWrite(LED_GREEN, LOW);
-    delay(100);
-    digitalWrite(LED_GREEN, HIGH);
-    delay(100);
-    digitalWrite(LED_BLUE,  LOW);
-    delay(100);
-    digitalWrite(LED_BLUE,  HIGH);
-    delay(100);
-    digitalWrite(LCD_BACKLIGHT, HIGH);
-    delay(100);
-    digitalWrite(LCD_BACKLIGHT, LOW);
-*/    
+  
+    HandleI2cCommands();
+    
+    
 }
 
-void receiveI2C(int howMany)
+
+void HandleI2cCommands()
 {
-    const uint8_t cmd = Wire.read();
+    if(recvLast + 1000 < millis()) 
+      recvPos = 0;  // reset if we didn't receive anything for more than a second
+    if(recvPos < 1)
+        return;        
     
-    switch(cmd)
+    switch(recvBuffer[0])
     {
         case 0xA1: // change the i2c address -> not yet supported
             break;
@@ -130,45 +121,30 @@ void receiveI2C(int howMany)
             disp.LcdUpdate();
             break;
         case 0xB2: // adjust the contrast. max is 0x7F
-        {
-            const uint8_t val = GetNextI2cByte();
-            disp.LcdContrast(val);
+            if(recvPos < 2)
+                return;
+            disp.LcdContrast(recvBuffer[1]);
             break;
-        }
         case 0xB3: // write text at a given position
-        {
-            const uint8_t xpos = GetNextI2cByte();
-            const uint8_t ypos = GetNextI2cByte();
-            disp.LcdGotoXYFont(xpos, ypos);
-            const uint8_t large = GetNextI2cByte();
-            const Nokia3310LCD::LcdFontSize fontSize = large ? Nokia3310LCD::FONT_2X : Nokia3310LCD::FONT_1X;
-            char text[32];
-            const uint8_t txtLen = GetNextI2cByte();
-            for(uint8_t i=0, j=0; i<txtLen && i<31 && j<2048; ++j)
-                if(Wire.available() > 0)
-                  text[i++] = Wire.read();
-            text[min(txtLen, 31)] = '\0';
-            disp.LcdStr(fontSize, text);
+            if(recvPos < 5 || recvPos < 5 + recvBuffer[4])
+                return;
+            disp.LcdGotoXYFont(recvBuffer[1], recvBuffer[2]);
+            recvBuffer[min(5 + recvBuffer[4], sizeof(recvBuffer) - 1)] = '\0';
+            disp.LcdStr(recvBuffer[3] ? Nokia3310LCD::FONT_2X : Nokia3310LCD::FONT_1X, 
+                        reinterpret_cast<char*>(recvBuffer + 5));
             break;
-        }
         case 0xB4: // set a single pixel : 0:white  1:black  2:xor
-        {
-            const uint8_t xpos = GetNextI2cByte();
-            const uint8_t ypos = GetNextI2cByte();
-            const uint8_t val  = GetNextI2cByte();
-            disp.LcdPixel(xpos, ypos, val == 1 ? Nokia3310LCD::PIXEL_ON : val == 2 ? Nokia3310LCD::PIXEL_XOR : Nokia3310LCD::PIXEL_OFF);
+            if(recvPos < 4)
+                return;
+            disp.LcdPixel(recvBuffer[1], recvBuffer[2], 
+                  recvBuffer[3] == 1 ? Nokia3310LCD::PIXEL_ON : recvBuffer[3] == 2 ? Nokia3310LCD::PIXEL_XOR : Nokia3310LCD::PIXEL_OFF);
             break;
-        }
         case 0xB5: // line
-        {
-            const uint8_t x1  = GetNextI2cByte();
-            const uint8_t y1  = GetNextI2cByte();
-            const uint8_t x2  = GetNextI2cByte();
-            const uint8_t y2  = GetNextI2cByte();
-            const uint8_t val = GetNextI2cByte();
-            disp.LcdLine(x1, x2, y1, y2, val == 1 ? Nokia3310LCD::PIXEL_ON : val == 2 ? Nokia3310LCD::PIXEL_XOR : Nokia3310LCD::PIXEL_OFF);
+            if(recvPos < 6)
+                return;
+            disp.LcdLine(recvBuffer[1], recvBuffer[3], recvBuffer[2], recvBuffer[4], 
+                  recvBuffer[5] == 1 ? Nokia3310LCD::PIXEL_ON : recvBuffer[5] == 2 ? Nokia3310LCD::PIXEL_XOR : Nokia3310LCD::PIXEL_OFF);
             break;
-        }
         case 0xB6: // startup screen
             ShowStartupScreen();
             break;
@@ -179,51 +155,49 @@ void receiveI2C(int howMany)
             digitalWrite(LCD_BACKLIGHT, LOW);
             break;
         case 0xC3: // red led brightness
-        {
-            const uint8_t val = GetNextI2cByte();
-            analogWrite(LED_RED, val);
-        }
+            if(recvPos < 2)
+                return;
+            analogWrite(LED_RED, recvBuffer[1]);
         case 0xC4: // green led brightness
-        {
-            const uint8_t val = GetNextI2cByte();
-            analogWrite(LED_GREEN, val);
-        }
+            if(recvPos < 2)
+                return;
+            analogWrite(LED_GREEN, recvBuffer[1]);
         case 0xC5: // blue led brightness
-        {
-            const uint8_t val = GetNextI2cByte();
-            analogWrite(LED_BLUE, val);
-        }
+            if(recvPos < 2)
+                return;
+            analogWrite(LED_BLUE, recvBuffer[1]);
         case 0xCA: // play a tone on the piezo buzzer
         {
-            const uint16_t frequ = GetNextI2cByte() << 8 + GetNextI2cByte();
-            const uint16_t dur   = GetNextI2cByte() << 8 + GetNextI2cByte();
+            if(recvPos < 5)
+                return;
+            const uint16_t frequ = static_cast<uint16_t>(recvBuffer[1]) << 8 + recvBuffer[2];
+            const uint16_t dur   = static_cast<uint16_t>(recvBuffer[3]) << 8 + recvBuffer[4];
             tone(PIEZO_BUZZER, frequ, dur);
         }
+        default:
+            ;// invalid command. just reset below
     }
-    
-/*    
-  while(1 < Wire.available()) // loop through all but the last
-  {
-    char c = Wire.read(); // receive byte as a character
-//    Serial.print(c);         // print the character
-  }
-  int x = Wire.read();    // receive byte as an integer
-//  Serial.println(x);         // print the integer
-*/
+   
+    // if we get here, assume that the command was executed
+    // so we can reset the receive buffer
+    recvPos = 0;
 }
 
-uint8_t GetNextI2cByte()
+void receiveI2C(int howMany)
 {
-    for(uint8_t j=0;  j<1024; ++j)
-        if(Wire.available() > 0)
-            return Wire.read();
-        else
-            delay(2);
-    return 0x00;
+    for(int i=0; i<howMany; ++i)
+    {
+        const uint8_t val = Wire.read();
+        
+        if(recvPos + 1 < sizeof(recvBuffer))
+            recvBuffer[recvPos++] = val;
+    }
+    recvLast = millis();
 }
 
 void ShowStartupScreen()
 {
+    disp.LcdClear();
     disp.LcdGotoXYFont(1, 1);
     disp.LcdStr(Nokia3310LCD::FONT_1X, "Borm ERP");
     disp.LcdGotoXYFont(1, 3);

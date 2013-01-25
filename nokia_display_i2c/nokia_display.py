@@ -88,8 +88,8 @@ if __name__ == "__main__":
 	disp.ClearDisplay()
 	disp.UpdateDisplay()
 	disp.SetContrast(50)
-#	disp.LineOut(5, 5, 70, 20, 1)
-#	disp.TextOut(5, 5, "Hello World")
+	disp.LineOut(5, 5, 70, 20, 1)
+	disp.TextOut(5, 5, "Hello World")
 	disp.UpdateDisplay()	
 
 
