@@ -23,13 +23,11 @@ class NokiaDisplay:
 		self.i2c.write_byte(self.i2cSlaveAddr, val)
 
 	def TextOut(self, xpos, ypos, text, big = False): # write text at a given position
-		self.i2c.write_byte(self.i2cSlaveAddr, 0xB3)
-		self.i2c.write_byte(self.i2cSlaveAddr, xpos)
-		self.i2c.write_byte(self.i2cSlaveAddr, ypos)
-		self.i2c.write_byte(self.i2cSlaveAddr, 1 if big == True else 0)
-		self.i2c.write_byte(self.i2cSlaveAddr, len(text))
+		data = [xpos, ypos, 1 if big == True else 0, len(text)]
 		for i in range(len(text)):
-			self.i2c.write_byte(self.i2cSlaveAddr, ord(text[i]))
+			data.append(ord(text[i]))
+		self.i2c.write_i2c_block_data(self.i2cSlaveAddr, 0xB3, data)
+
 
 	def SetPixel(self, xpos, ypos, val = 1): # set a single pixel : 0:white  1:black  2:xor
 		self.i2c.write_byte(self.i2cSlaveAddr, 0xB4)
@@ -67,9 +65,8 @@ class NokiaDisplay:
 		self.i2c.write_byte(self.i2cSlaveAddr, val)
 
 	def PlayTone(self, frequency, duration): # play a tone on the piezzo buzzer
-		self.i2c.write_byte(self.i2cSlaveAddr, 0xCA)
-		self.i2c.write_word(self.i2cSlaveAddr, frequency)
-		self.i2c.write_word(self.i2cSlaveAddr, duration)
+		data = [frequency, duration]
+		self.i2c.write_i2c_block_data(self.i2cSlaveAddr, 0xCA, data)
 
 	def __repr__(self):
 		print "atmega interfacing a nokia display at i2c address %d" % self.i2cSlaveAddr
@@ -84,11 +81,12 @@ if __name__ == "__main__":
 	disp.UpdateDisplay()
 	time.sleep(1.0)
 	disp.StartScreen()
+	disp.UpdateDisplay()
 	time.sleep(1.0)
 	disp.ClearDisplay()
 	disp.UpdateDisplay()
-	disp.SetContrast(50)
-	disp.LineOut(5, 5, 70, 20, 1)
+	disp.SetContrast(0x40)
+	disp.LineOut(5, 5, 40, 20, 1)
 	disp.TextOut(5, 5, "Hello World")
 	disp.UpdateDisplay()	
 
