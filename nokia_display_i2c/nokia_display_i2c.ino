@@ -34,7 +34,7 @@
 //         uart TXD <- 3|    |26                   +---- V
 //                     4|    |25                   |  +- G                    
 //      LED red    <-  5|    |24                   |  |   nokia 5110 LCD
-//                     6|    |23 -> backlight --+  |  |  +--------------+
+//      buzzer     <-  6|    |23 -> backlight --+  |  |  +--------------+
 //                VCC  7|    |22  GND ----------|--|--+--|        GND ->|
 //                GND  8|    |21                +--+-----|  backlight ->|
 //             quartz  9|    |20  VCC     ---------------|        VCC ->|
@@ -158,14 +158,17 @@ void HandleI2cCommands()
             if(recvPos < 2)
                 return;
             analogWrite(LED_RED, recvBuffer[1]);
+            break;
         case 0xC4: // green led brightness
             if(recvPos < 2)
                 return;
             analogWrite(LED_GREEN, recvBuffer[1]);
+            break;
         case 0xC5: // blue led brightness
             if(recvPos < 2)
                 return;
             analogWrite(LED_BLUE, recvBuffer[1]);
+            break;
         case 0xCA: // play a tone on the piezo buzzer
         {
             if(recvPos < 5)
@@ -173,12 +176,13 @@ void HandleI2cCommands()
             const uint16_t frequ = static_cast<uint16_t>(recvBuffer[1]) << 8 + recvBuffer[2];
             const uint16_t dur   = static_cast<uint16_t>(recvBuffer[3]) << 8 + recvBuffer[4];
             tone(PIEZO_BUZZER, frequ, dur);
+            break;
         }
         default:
             // invalid command. just reset below
-            digitalWrite(LED_RED, HIGH);
-            delay(500);
             digitalWrite(LED_RED, LOW);
+            delay(500);
+            digitalWrite(LED_RED, HIGH);
     }
    
     // if we get here, assume that the command was executed
