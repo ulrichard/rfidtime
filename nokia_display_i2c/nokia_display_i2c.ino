@@ -105,8 +105,8 @@ void loop()
 
 void HandleI2cCommands()
 {
-    if(recvLast + 1000 < millis()) 
-      recvPos = 0;  // reset if we didn't receive anything for more than a second
+    if(recvLast + 3000 < millis()) 
+      recvPos = 0;  // reset if we didn't receive anything for more than three seconds
     if(recvPos < 1)
         return;        
     
@@ -175,7 +175,10 @@ void HandleI2cCommands()
             tone(PIEZO_BUZZER, frequ, dur);
         }
         default:
-            ;// invalid command. just reset below
+            // invalid command. just reset below
+            digitalWrite(LED_RED, HIGH);
+            delay(500);
+            digitalWrite(LED_RED, LOW);
     }
    
     // if we get here, assume that the command was executed
