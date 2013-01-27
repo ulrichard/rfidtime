@@ -53,6 +53,7 @@
 #include <SPI.h>
 #include <Wire.h>
 
+#define UART_DEBUG
 
 Nokia3310LCD  disp(9, 8, 7);
 const uint8_t LCD_BACKLIGHT = A0;
@@ -70,8 +71,10 @@ void setup()
     recvPos = 0;
     recvLast = millis();
     
-//    Serial.begin(19200);  
-//    Serial.println("init");
+#ifdef UART_DEBUG
+    Serial.begin(19200);  
+    Serial.println("init");
+#endif
 
     pinMode(LCD_BACKLIGHT, OUTPUT);
     digitalWrite(LCD_BACKLIGHT, LOW);
@@ -105,24 +108,50 @@ void loop()
 
 void HandleI2cCommands()
 {
-    if(recvLast + 3000 < millis()) 
-      recvPos = 0;  // reset if we didn't receive anything for more than three seconds
     if(recvPos < 1)
         return;        
+    if(recvLast + 3000 < millis())
+    {
+        recvPos = 0;  // reset if we didn't receive anything for more than three seconds
+#ifdef UART_DEBUG
+            Serial.print("Timeout");
+#endif 
+    }
+    
+#ifdef UART_DEBUG
+    Serial.print(recvPos);
+    Serial.println("bytes in buffer: ");
+    for(uint8_t i=0; i<recvPos; ++i)
+        Serial.print(recvBuffer[i]);
+    Serial.println("");
+#endif    
     
     switch(recvBuffer[0])
     {
         case 0xA1: // change the i2c address -> not yet supported
+#ifdef UART_DEBUG
+            Serial.println("changing the i2c address is not implemented yet");
+#endif      
             break;
         case 0xB0: // sets all pixels to white
+#ifdef UART_DEBUG
+            Serial.println("LcdClear");
+#endif      
             disp.LcdClear();
             break;
         case 0xB1: // send buffer to the LCD
+#ifdef UART_DEBUG
+            Serial.println("LcdUpdate");
+#endif      
             disp.LcdUpdate();
             break;
         case 0xB2: // adjust the contrast. max is 0x7F
             if(recvPos < 2)
                 return;
+#ifdef UART_DEBUG
+            Serial.print("LcdContrast ");
+            Serial.println(recvBuffer[1]);
+#endif      
             disp.LcdContrast(recvBuffer[1]);
             break;
         case 0xB3: // write text at a given position
@@ -130,44 +159,63 @@ void HandleI2cCommands()
                 return;
             disp.LcdGotoXYFont(recvBuffer[1], recvBuffer[2]);
             recvBuffer[min(5 + recvBuffer[4], sizeof(recvBuffer) - 1)] = '\0';
+#ifdef UART_DEBUG
+            Serial.print("Text Out");
+            Serial.println(reinterpret_cast<char*>(recvBuffer + 5));
+#endif      
             disp.LcdStr(recvBuffer[3] ? Nokia3310LCD::FONT_2X : Nokia3310LCD::FONT_1X, 
                         reinterpret_cast<char*>(recvBuffer + 5));
             break;
         case 0xB4: // set a single pixel : 0:white  1:black  2:xor
             if(recvPos < 4)
                 return;
+#ifdef UART_DEBUG
+            Serial.println("LcdPixel");
+#endif      
             disp.LcdPixel(recvBuffer[1], recvBuffer[2], 
                   recvBuffer[3] == 1 ? Nokia3310LCD::PIXEL_ON : recvBuffer[3] == 2 ? Nokia3310LCD::PIXEL_XOR : Nokia3310LCD::PIXEL_OFF);
             break;
         case 0xB5: // line
             if(recvPos < 6)
                 return;
+#ifdef UART_DEBUG
+            Serial.println("LcdLine");
+#endif      
             disp.LcdLine(recvBuffer[1], recvBuffer[3], recvBuffer[2], recvBuffer[4], 
                   recvBuffer[5] == 1 ? Nokia3310LCD::PIXEL_ON : recvBuffer[5] == 2 ? Nokia3310LCD::PIXEL_XOR : Nokia3310LCD::PIXEL_OFF);
             break;
         case 0xB6: // startup screen
+#ifdef UART_DEBUG
+            Serial.println("LcdStartupScreen");
+#endif      
             ShowStartupScreen();
             break;
         case 0xC1: // backlight on
+#ifdef UART_DEBUG
+            Serial.println("LcdBacklightOn");
+#endif      
             digitalWrite(LCD_BACKLIGHT, HIGH);
             break;
         case 0xC2: // backlight off
+#ifdef UART_DEBUG
+            Serial.println("LcdBacklightOff");
+#endif      
             digitalWrite(LCD_BACKLIGHT, LOW);
             break;
         case 0xC3: // red led brightness
             if(recvPos < 2)
                 return;
-            analogWrite(LED_RED, recvBuffer[1]);
+            analogWrite(LED_RED, 255 - recvBuffer[1]);
             break;
         case 0xC4: // green led brightness
             if(recvPos < 2)
                 return;
-            analogWrite(LED_GREEN, recvBuffer[1]);
+            analogWrite(LED_GREEN, 255 - recvBuffer[1]);
             break;
         case 0xC5: // blue led brightness
             if(recvPos < 2)
                 return;
-            analogWrite(LED_BLUE, recvBuffer[1]);
+            analogWrite(LED_BLUE, 255 - recvBuffer[1]);
             break;
         case 0xCA: // play a tone on the piezo buzzer
         {
@@ -175,11 +223,21 @@ void HandleI2cCommands()
                 return;
             const uint16_t frequ = static_cast<uint16_t>(recvBuffer[1]) << 8 + recvBuffer[2];
             const uint16_t dur   = static_cast<uint16_t>(recvBuffer[3]) << 8 + recvBuffer[4];
+#ifdef UART_DEBUG
+            Serial.print("Tone frequ: ");
+            Serial.print(frequ);
+            Serial.print(" dur: ");
+            Serial.println(dur);
+#endif      
             tone(PIEZO_BUZZER, frequ, dur);
             break;
         }
         default:
             // invalid command. just reset below
+#ifdef UART_DEBUG
+            Serial.print("InvalidCommand:");
+            Serial.println(recvBuffer[0]);
+#endif             
             digitalWrite(LED_RED, LOW);
             delay(500);
             digitalWrite(LED_RED, HIGH);
