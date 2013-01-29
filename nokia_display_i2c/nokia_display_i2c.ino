@@ -27,11 +27,15 @@
 // PCINT23/AIN1       PD7 D7  13|    |16  D10 PB2  SS/OC1B/PCINT2
 // PCINT0/CLKO/ICP1   PB0 D8  14|    |15  D9  PB1  OC1A/PCINT1
 //                              +----+
+//    ICSP  (in circuit serial programmer)
+//    MISO ++ VTG
+//     SCK ++ MOSI
+//     RST ++ GND
 //
 //                      +-\/-+
-//              RST -> 1|    |28 <-  SCL  -------------- C
-//         uart RXD -> 2|    |27 <-> SDA  -------------- D
-//         uart TXD <- 3|    |26                   +---- V
+//              RST -> 1|    |28 <-  SCL  -------------- C  I
+//         uart RXD -> 2|    |27 <-> SDA  -------------- D  2
+//         uart TXD <- 3|    |26                   +---- V  C
 //                     4|    |25                   |  +- G                    
 //      LED red    <-  5|    |24                   |  |   nokia 5110 LCD
 //      buzzer     <-  6|    |23 -> backlight --+  |  |  +--------------+
