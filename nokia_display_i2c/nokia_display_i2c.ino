@@ -57,7 +57,7 @@
 #include <SPI.h>
 #include <Wire.h>
 
-#define UART_DEBUG
+//#define UART_DEBUG
 
 Nokia3310LCD  disp(9, 8, 7);
 const uint8_t LCD_BACKLIGHT = A0;
@@ -118,7 +118,7 @@ void HandleI2cCommands()
     {
         recvPos = 0;  // reset if we didn't receive anything for more than three seconds
 #ifdef UART_DEBUG
-            Serial.print("Timeout");
+        Serial.print("Timeout");
 #endif 
     }
     
