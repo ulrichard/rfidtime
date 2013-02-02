@@ -12,6 +12,7 @@ import time
 from configobj import ConfigObj
 import os
 import smbus
+from nokia_display import NokiaDisplay
 
 #with daemon.DaemonContext():
 #    do_main_program()
@@ -29,6 +30,13 @@ def main(config, opts):
 		i2c.write_byte(0x09, 0x00)
 		i2c.write_byte(0x09, 0x00)
 		i2c.write_byte(0x09, 0x00)
+
+	if configval.get('useNokiaDisplay'):
+		disp = NokiaDisplay(0x19, configval.get('NokiaDisplayBus'))
+		disp.StartScreen()
+		disp.Backlight(True)
+		time.sleep(0.5)
+		disp.Backlight(False)
 
 	# connect to the database
 	print "connecting to the database"
@@ -75,10 +83,7 @@ def main(config, opts):
 		# the mapping from rfid tag to userid would better be done in the database, but for now, the cfg file is ok
 		if not rfidtag in userconfig:
 			print "Unknown rfid tag : " + rfidtag
-			if configval.get('useSpeech'):
-				os.system('echo "Unknown rfid tag" | festival --pipe --tts');
-			if configval.get('useBlinkM'):
-                       		light_bulb('red')
+			notification(rfidtag, 'Unknown rfid tag', 'red', configval)
 			continue
 
 		userid = int(userconfig[rfidtag])
@@ -99,12 +104,9 @@ def open_or_close_time_record(dbconn, userid, configval):
 	row = cur.fetchone()
 	if not row:
 		print "no records for this user. Please start tracking time with the desktop application!"
-		if configval.get('useBlinkM'):
-			light_bulb('red')
-		if configval.get('useBeep'):
-			os.system('beep -f 1000 -l 100');
-		if configval.get('useSpeech'):
-			os.system('echo "no records for this user." | festival --pipe --tts');
+
+		notification(userid, 'no records for this user', 'red', configval)
+
 	else:
 		print "last record : %d, %d, %s, %s, %s, %s" % (row['DZ_DATEN_ID'], row[1], row['CURRENTUSER'], row['DZ_DATUM'], row['DZ_BZ'], row['DZ_EZ'])
 	  
@@ -114,12 +116,9 @@ def open_or_close_time_record(dbconn, userid, configval):
 			# just close the current record
 			print "closing record " + str(row['DZ_DATEN_ID'])
 			cur.execute('UPDATE DZ_DATEN SET DZ_EZ=%f, DZ_IST=%f WHERE DZ_DATEN_ID=%d' % (industrynow, industrynow - row['DZ_BZ'], row['DZ_DATEN_ID']))
-			if configval.get('useBlinkM'):
-				light_bulb('green')
-			if configval.get('useBeep'):
-				os.system('beep -f 1000 -l 10 -n -f 2000 -l 10');
-			if configval.get('useSpeech'):
-				os.system('echo "good bye %s." | festival --pipe --tts' % row['CURRENTUSER']);
+
+			notification(row['CURRENTUSER'], 'geht', 'green', configval)
+
 		else:
 			# create a new record with mostly the same settings as the last one
 			print "The last record is closed. Creating a new record."
@@ -127,41 +126,66 @@ def open_or_close_time_record(dbconn, userid, configval):
 				'(MITARBEITER_ID, AUF_ID, KOSTENSTELLEN_ID, DZ_TAET_ID, DZ_DATUM, ZM_ID, DZ_BZ, EROEFFNUNGSDATUM, OPEN_USER, AENDERUNGSDATUM, CURRENTUSER) VALUES '
 				'(%d, %d, %d, %d, %s, %d, %f, GETDATE(), %s, GETDATE(), %s)', 
 				(row['MITARBEITER_ID'], row['AUF_ID'], row['KOSTENSTELLEN_ID'], row['DZ_TAET_ID'], date.today().isoformat(), row['ZM_ID'], industrynow, row['OPEN_USER'], row['CURRENTUSER']))
-			if configval.get('useBlinkM'):
-				light_bulb('blue')
-			if configval.get('useBeep'):
-				os.system('beep -f 2000 -l 10 -n -f 1000 -l 10');
-			if configval.get('useSpeech'):
-				os.system('echo "Hello %s. Happy working." | festival --pipe --tts' % row['CURRENTUSER']);
-		
+			
+			notification(row['CURRENTUSER'], 'kommt', 'blue', configval)			
+			
 		if configval.get('writetodb'):
 			dbconn.commit()
 		else:
 			dbconn.rollback()
 	
-def light_bulb(color):
-	i2c = smbus.SMBus(0)
+def notification(who, what, color, configval):
+	if configval.get('useNokiaDisplay'):
+		disp = NokiaDisplay(0x19, configval.get('NokiaDisplayBus'))
+		disp.Backlight(True)
+		disp.TextOut(1, 2, who)
+		disp.TextOut(1, 4, what)
+		if(color == 'blue'):
+			disp.LedBlue(250)
+		elif(color == 'green'):
+			disp.LedGreen(250)
+		elif(color == 'red'):
+			disp.LedRed(250);
+		time.sleep(2.0)
+		disp.Backlight(False)
+		disp.StartScreen()
+		disp.LedRed(0)
+		disp.LedGreen(0)
+		disp.LedBlue(0)
 
-	if(color == 'blue'):
+	if configval.get('useBeep'):
+		if(color == 'blue'):
+			os.system('beep -f 2000 -l 10 -n -f 1000 -l 10')
+		elif(color == 'green'):
+			os.system('beep -f 1000 -l 10 -n -f 2000 -l 10')
+		elif(color == 'red'):
+			os.system('beep -f 1000 -l 100');
+
+	if configval.get('useSpeech'):
+		os.system('echo "%s %s" | festival --pipe --tts' % (who, what))
+
+	if configval.get('useBlinkM'): 
+		i2c = smbus.SMBus(0)
+		if(color == 'blue'):
+			i2c.write_byte(0x09, 0x6e)
+			i2c.write_byte(0x09, 0x00)
+			i2c.write_byte(0x09, 0x00)
+			i2c.write_byte(0x09, 0xff)
+		elif(color == 'green'):
+			i2c.write_byte(0x09, 0x6e)
+			i2c.write_byte(0x09, 0x00)
+			i2c.write_byte(0x09, 0xff)
+			i2c.write_byte(0x09, 0x00)
+		elif(color == 'red'):
+			i2c.write_byte(0x09, 0x6e)
+			i2c.write_byte(0x09, 0xff)
+			i2c.write_byte(0x09, 0x00)
+			i2c.write_byte(0x09, 0x00)
+		time.sleep(2.0);
 		i2c.write_byte(0x09, 0x6e)
 		i2c.write_byte(0x09, 0x00)
 		i2c.write_byte(0x09, 0x00)
-		i2c.write_byte(0x09, 0xff)
-	elif(color == 'green'):
-		i2c.write_byte(0x09, 0x6e)
 		i2c.write_byte(0x09, 0x00)
-		i2c.write_byte(0x09, 0xff)
-		i2c.write_byte(0x09, 0x00)
-	else: # red
-		i2c.write_byte(0x09, 0x6e)
-		i2c.write_byte(0x09, 0xff)
-		i2c.write_byte(0x09, 0x00)
-		i2c.write_byte(0x09, 0x00)
-	time.sleep(2.0);
-	i2c.write_byte(0x09, 0x6e)
-	i2c.write_byte(0x09, 0x00)
-	i2c.write_byte(0x09, 0x00)
-	i2c.write_byte(0x09, 0x00)
 
 if __name__ == '__main__':
     from configglue import schema
@@ -201,6 +225,12 @@ if __name__ == '__main__':
 		useSpeech = schema.BoolOption(
 			default=False,
 			help='Activate spoken feedback with the festival text to speech engine.')
+		useNokiaDisplay = schema.BoolOption(
+			default=False,
+			help='Display text on a nokia display connected to an AtMega8 over i2c.')
+		NokiaDisplayBus = schema.IntegerOption(
+			default=0,
+			help='The i2c bus that the nokia display is connected. 0 on the alix or 1 on the raspberry pi.')
 
 
     # glue everything together

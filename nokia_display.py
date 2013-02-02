@@ -46,6 +46,7 @@ class NokiaDisplay:
 
 	def StartScreen(self):                     # show the start screen
 		self.i2c.write_byte(self.i2cSlaveAddr, 0xB6)
+		time.sleep(0.02) # give the micro processor some time to swallow the data
 
 	def Backlight(self, Enable): # draw a line -> val : 0:white  1:black  2:xor
 		if Enable:
