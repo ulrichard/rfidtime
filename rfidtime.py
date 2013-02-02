@@ -33,8 +33,8 @@ def main(config, opts):
 
 	if configval.get('useNokiaDisplay'):
 		disp = NokiaDisplay(0x19, configval.get('NokiaDisplayBus'))
-		disp.StartScreen()
 		disp.Backlight(True)
+		disp.StartScreen()
 		time.sleep(0.5)
 		disp.Backlight(False)
 
@@ -228,7 +228,7 @@ if __name__ == '__main__':
 		useNokiaDisplay = schema.BoolOption(
 			default=False,
 			help='Display text on a nokia display connected to an AtMega8 over i2c.')
-		NokiaDisplayBus = schema.IntegerOption(
+		NokiaDisplayBus = schema.IntOption(
 			default=0,
 			help='The i2c bus that the nokia display is connected. 0 on the alix or 1 on the raspberry pi.')
 
