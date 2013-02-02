@@ -83,9 +83,9 @@ if __name__ == "__main__":
 	disp.ClearDisplay()
 	disp.UpdateDisplay()
 	time.sleep(1.0)
+	disp.LedBlue(0)
 	disp.StartScreen()
 	disp.UpdateDisplay()
-	disp.LedBlue(0)
 	time.sleep(1.0)
 	disp.ClearDisplay()
 	disp.UpdateDisplay()
@@ -93,6 +93,7 @@ if __name__ == "__main__":
 	disp.LineOut(5, 5, 40, 20, 1)
 	disp.TextOut(2, 2, "Hello World")
 	disp.UpdateDisplay()
+	time.sleep(0.2)
 	disp.Backlight(False)	
 
 
