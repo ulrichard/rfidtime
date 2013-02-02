@@ -27,8 +27,8 @@
 // PCINT23/AIN1       PD7 D7  13|    |16  D10 PB2  SS/OC1B/PCINT2
 // PCINT0/CLKO/ICP1   PB0 D8  14|    |15  D9  PB1  OC1A/PCINT1
 //                              +----+
-//    ICSP  (in circuit serial programmer)
-//    MISO ++ VTG
+//  ICSP  (in circuit serial programmer)
+//    MISO *+ VTG
 //     SCK ++ MOSI
 //     RST ++ GND
 //
@@ -41,8 +41,8 @@
 //      buzzer     <-  6|    |23 -> backlight --+  |  |  +--------------+
 //                VCC  7|    |22  GND ----------|--|--+--|        GND ->|
 //                GND  8|    |21                +--+-----|  backlight ->|
-//             quartz  9|    |20  VCC     ---------------|        VCC ->|
-//             quartz 10|    |19  -> SCK  ---------------|        SCK ->|
+//          resonator  9|    |20  VCC     ---------------|        VCC ->|
+//          resonator 10|    |19  -> SCK  ---------------|        SCK ->|
 //      LED green  <- 11|    |18  <- MISO    +-----------|       MOSI ->|
 //      LED blue   <- 12|    |17  -> MOSI ---+     +-----|   cmd/data ->|
 // LCD chip select <- 13|    |16  <- SS            | +---|chip enable ->|
@@ -99,6 +99,12 @@ void setup()
     disp.init();
     disp.LcdContrast(0x40);   
     ShowStartupScreen();
+
+	// give some hints to guess if the clock speed is accurate
+	tone(PIEZO_BUZZER, 1000, 1000);
+	analogWrite(LED_RED, 120);
+	delay(1000);
+    digitalWrite(LED_RED, HIGH);
 }
 
 void loop()                     
