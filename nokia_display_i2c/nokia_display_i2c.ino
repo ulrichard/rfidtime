@@ -86,6 +86,11 @@ void setup()
     Wire.begin(0x19); // join i2c bus with address #0x19
     Wire.onReceive(receiveI2C); // register event
     
+	// slow down the i2c bus to match the bifferboard
+	const uint16_t CPU_FREQ = 8000000L;
+	const uint16_t TWI_FREQ =   32500L;
+	TWBR = ((CPU_FREQ / TWI_FREQ) - 16) / 2;
+
     SPI.begin();
     SPI.setClockDivider(32); // 500 kHz
     

@@ -21,7 +21,7 @@ generate_arduino_firmware(nokia_display
 
 ADD_CUSTOM_TARGET(flash
 			avrdude -P ${AVRDUDE_PORT} -p ${AVR_DEVICE} -c stk500v2 -U flash:w:nokia_display.hex
-	DEPENDS nokia_display.elf
+	DEPENDS nokia_display
 )
 
 # for fuse settings see http://www.engbedded.com/fusecalc/
