@@ -75,7 +75,7 @@ class NokiaDisplay:
 
 
 
-# Main program
+# test code
 if __name__ == "__main__":
 	disp = NokiaDisplay(0x19, 1) # bus is 0 on the alix, and 1 on the raspbe
 	disp.Backlight(True)
