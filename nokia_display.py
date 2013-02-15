@@ -42,7 +42,7 @@ class NokiaDisplay:
 		self.i2c.write_byte(self.i2cSlaveAddr, x2)
 		self.i2c.write_byte(self.i2cSlaveAddr, y2)
 		self.i2c.write_byte(self.i2cSlaveAddr, val)
-		time.sleep(0.005) # give the micro processor some time to swallow the data
+		time.sleep(0.01) # give the micro processor some time to swallow the data
 
 	def StartScreen(self):                     # show the start screen
 		self.i2c.write_byte(self.i2cSlaveAddr, 0xB6)
@@ -77,7 +77,7 @@ class NokiaDisplay:
 
 # Main program
 if __name__ == "__main__":
-	disp = NokiaDisplay(0x19, 1) # bus is 0 on the alix, and 1 on the raspbe
+	disp = NokiaDisplay(0x19, 0) # bus is 0 on the alix, and 1 on the raspbe
 	disp.Backlight(True)
 	disp.LedBlue(200)
 	disp.ClearDisplay()
@@ -90,7 +90,10 @@ if __name__ == "__main__":
 	disp.ClearDisplay()
 	disp.UpdateDisplay()
 	disp.SetContrast(0x40)
+	time.sleep(0.1)
 	disp.LineOut(5, 5, 40, 20, 1)
+	disp.UpdateDisplay()
+	time.sleep(0.4)
 	disp.TextOut(2, 2, "Hello World")
 	disp.UpdateDisplay()
 	time.sleep(0.2)
