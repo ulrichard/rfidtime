@@ -141,20 +141,23 @@ def notification(who, what, color, configval):
 	if configval.get('useNokiaDisplay'):
 		disp = NokiaDisplay(0x19, configval.get('NokiaDisplayBus'))
 		disp.Backlight(True)
+		disp.ClearDisplay()
 		disp.TextOut(1, 2, who)
 		disp.TextOut(1, 4, what)
+		disp.UpdateDisplay()
 		if(color == 'blue'):
 			disp.LedBlue(250)
 		elif(color == 'green'):
 			disp.LedGreen(250)
 		elif(color == 'red'):
 			disp.LedRed(250);
-		time.sleep(2.0)
-		disp.Backlight(False)
-		disp.StartScreen()
+		time.sleep(1.0)
 		disp.LedRed(0)
 		disp.LedGreen(0)
 		disp.LedBlue(0)
+		time.sleep(2.0)
+		disp.Backlight(False)
+		disp.StartScreen()
 
 	if configval.get('useBeep'):
 		if(color == 'blue'):
