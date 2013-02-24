@@ -37,6 +37,9 @@ def main(config, opts):
 		disp.StartScreen()
 		time.sleep(0.5)
 		disp.Backlight(False)
+		disp.LedRed(0)
+		disp.LedGreen(0)
+		disp.LedBlue(0)
 
 	# connect to the database
 	print "connecting to the database"
