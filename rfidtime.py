@@ -87,6 +87,7 @@ def main(config, opts):
 		if not rfidtag in userconfig:
 			print "Unknown rfid tag : " + rfidtag
 			notification(rfidtag, 'Unknown rfid tag', 'red', configval)
+			ser.flushInput()
 			continue
 
 		userid = int(userconfig[rfidtag])
@@ -146,11 +147,11 @@ def notification(who, what, color, configval):
 		disp.TextOut(1, 4, what)
 		disp.UpdateDisplay()
 		if(color == 'blue'):
-			disp.LedBlue(250)
+			disp.LedBlue(200)
 		elif(color == 'green'):
-			disp.LedGreen(250)
+			disp.LedGreen(200)
 		elif(color == 'red'):
-			disp.LedRed(250);
+			disp.LedRed(200)
 		time.sleep(1.0)
 		disp.LedRed(0)
 		disp.LedGreen(0)
