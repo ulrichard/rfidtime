@@ -86,7 +86,7 @@ def main(config, opts):
 		# the mapping from rfid tag to userid would better be done in the database, but for now, the cfg file is ok
 		if not rfidtag in userconfig:
 			print "Unknown rfid tag : " + rfidtag
-			notification(rfidtag, 'Unknown rfid tag', 'red', configval)
+			notification(rfidtag, 'Unknown tag', 'red', configval)
 			ser.flushInput()
 			continue
 
@@ -143,8 +143,9 @@ def notification(who, what, color, configval):
 		disp = NokiaDisplay(0x19, configval.get('NokiaDisplayBus'))
 		disp.Backlight(True)
 		disp.ClearDisplay()
-		disp.TextOut(1, 2, who)
-		disp.TextOut(1, 4, what)
+		disp.TextOut(1, 1, who)
+		disp.TextOut(1, 2, what)
+		disp.TextOut(1, 6, time.strftime('%x %X')[0:14])
 		disp.UpdateDisplay()
 		if(color == 'blue'):
 			disp.LedBlue(200)
