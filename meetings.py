@@ -33,7 +33,8 @@ def main(config, opts):
 #        add_meeting(conn, '2012-12-13', 09.00, 09.50)
 #        add_meeting(conn, '2013-01-23', 10.20, 12.25) # scrum 
 #        add_meeting(conn, '2013-01-23', 12.75, 14.00) # scrum 
-	add_meeting(conn, '2013-02-04', 15.00, 16.50)  
+#	add_meeting(conn, '2013-02-04', 15.00, 16.50)  
+	add_meeting(conn, '2013-03-04', 14.50, 17.00)  
 
 	conn.close()
 
