@@ -153,11 +153,11 @@ def notification(who, what, color, configval):
 			disp.LedGreen(200)
 		elif(color == 'red'):
 			disp.LedRed(200)
-		time.sleep(1.0)
+		time.sleep(0.5)
 		disp.LedRed(0)
 		disp.LedGreen(0)
 		disp.LedBlue(0)
-		time.sleep(2.0)
+		time.sleep(3.0)
 		disp.Backlight(False)
 		disp.StartScreen()
 
