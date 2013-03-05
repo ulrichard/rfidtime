@@ -148,12 +148,12 @@ def notification(who, what, color, configval):
 		disp.TextOut(1, 6, time.strftime('%x %X')[0:14])
 		disp.UpdateDisplay()
 		if(color == 'blue'):
-			disp.LedBlue(200)
+			disp.LedBlue(130)
 		elif(color == 'green'):
-			disp.LedGreen(200)
+			disp.LedGreen(130)
 		elif(color == 'red'):
-			disp.LedRed(200)
-		time.sleep(0.5)
+			disp.LedRed(130)
+		time.sleep(0.3)
 		disp.LedRed(0)
 		disp.LedGreen(0)
 		disp.LedBlue(0)
