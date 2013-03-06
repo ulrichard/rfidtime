@@ -1,3 +1,9 @@
+rfidtime (0.0.25~quantal) quantal; urgency=low
+
+  * added a display
+
+ -- Richard Ulrich <richi@paraeasy.ch>  Thu, 06 Mar 2013 23:44:24 +0100
+
 rfidtime (0.0.24~quantal) quantal; urgency=low
 
   * got it running again on the bifferboar
