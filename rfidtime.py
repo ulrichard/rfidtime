@@ -157,6 +157,10 @@ def notification(who, what, color, configval):
 		disp.LedRed(0)
 		disp.LedGreen(0)
 		disp.LedBlue(0)
+		if(color == 'blue'):
+			disp.LoadGlyph(50, 14, 'glyph/factory32.png', True)
+		elif(color == 'green'):
+			disp.LoadGlyph(50, 14, 'glyph/beer32.png', True)
 		time.sleep(3.0)
 		disp.Backlight(False)
 		disp.StartScreen()
