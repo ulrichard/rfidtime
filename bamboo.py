@@ -25,6 +25,7 @@ class BambooRest:
 	
 # test code
 if __name__ == "__main__":
-	bamb = BambooRest('https://dev.cubx-software.com:8446', 'ulr', 'unoches118')
+	passwd = raw_input("Enter the password for ulr: ")
+	bamb = BambooRest('https://dev.cubx-software.com:8446', 'ulr', passwd)
 	print bamb.check()
 
