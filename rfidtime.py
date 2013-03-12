@@ -72,9 +72,16 @@ def main(config, opts):
 	print "listening for rfid tags"
 	while 1:
 		rfidtag = ''
+		timestr = ''
 		while len(rfidtag) < 10:
 			if ser.inWaiting() == 0:
 				time.sleep(0.05)
+				if timestr != time.strftime('%x %X')[0:14]:
+					timestr = time.strftime('%x %X')[0:14]
+					disp.TextOut(1, 6, timestr)
+					disp.UpdateDisplay()
+
+					# ToDo: check the bamboo status here
 				continue
 			serin = ser.read(1)
 			rfidtag += "%02X" % ord(serin)
@@ -158,9 +165,9 @@ def notification(who, what, color, configval):
 		disp.LedGreen(0)
 		disp.LedBlue(0)
 		if(color == 'blue'):
-			disp.LoadGlyph(50, 14, 'glyph/factory32.png', True)
+			disp.LoadGlyph(40, 10, 'glyph/factory32.png', True)
 		elif(color == 'green'):
-			disp.LoadGlyph(50, 14, 'glyph/beer32.png', True)
+			disp.LoadGlyph(40, 10, 'glyph/beer32.png', True)
 		time.sleep(3.0)
 		disp.Backlight(False)
 		disp.StartScreen()
