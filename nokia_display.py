@@ -2,6 +2,7 @@
 # script to send commands to the nokia display over i2c
 
 import smbus, time
+from PIL import Image
 
 class NokiaDisplay:
 	def __init__(self, i2cSlaveAddr = 0x19, i2cBusNbr = 0):
@@ -79,6 +80,23 @@ class NokiaDisplay:
 		self.i2c.write_i2c_block_data(self.i2cSlaveAddr, 0xCA, data)
 		time.sleep(0.02)
 
+	def LoadGlyph(self, xpos, ypos, filename, updatePerLine = False): # load a glyph from the local filesystem and show it on the display
+		im = Image.open(filename)
+		pix = im.load()
+		for j in range(im.size[1]):
+			for i in range(im.size[0]):
+				pixel = pix[i, j]
+				pxbri = pixel[0] + pixel[1] + pixel[2]	
+				if pxbri < 300:
+					self.SetPixel(xpos + i, ypos + j, 1)	
+#				else:
+#					self.SetPixel(xpos + i, ypos + j, 0)	
+			if updatePerLine:
+				if j % 4 == 0:
+					self.UpdateDisplay()
+					time.sleep(0.05)
+
+
 	def __repr__(self):
 		print "atmega interfacing a nokia display at i2c address %d" % self.i2cSlaveAddr
 
@@ -102,8 +120,15 @@ if __name__ == "__main__":
 	time.sleep(0.1)
 	disp.LineOut(5, 5, 40, 20, 1)
 	disp.UpdateDisplay()
-	time.sleep(0.4)
+	time.sleep(0.3)
 	disp.TextOut(2, 2, "Hello World")
+	disp.UpdateDisplay()
+	time.sleep(0.02)
+	filename = 'glyph/beer32.png'
+	im = Image.open(filename)
+	print im.size
+	pix = im.load()
+	disp.LoadGlyph(50, 14, filename, True)
 	disp.UpdateDisplay()
 	time.sleep(0.2)
 	disp.Backlight(False)	

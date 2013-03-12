@@ -9,7 +9,8 @@ Homepage:
 Package: rfidtime-base
 Architecture: all
 Essential: no
-Depends: ${misc:Depends}, ${python:Depends}, python-pymssql, python-serial, python-daemon, python-configobj, ntp, beep #python-configglue (>= 1.0)
+Depends: ${misc:Depends}, ${python:Depends}, python-pymssql, python-serial, python-daemon, python-configobj, ntp, beep, python-imaging, python-restkit
+#python-configglue (>= 1.0)
 Description: Logs your time in the BORM ERP system with an rfid tag reader. Base package.
 
 Package: rfidtime-bifferboard
