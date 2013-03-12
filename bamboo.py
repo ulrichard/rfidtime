@@ -7,16 +7,19 @@
 
 from restkit import request, Resource, BasicAuth
 
-class BambooRest:
-	def __init__(self, url, user, password):
-		self.url = url
-		self.user = user
-		self.passwd = password
+class BambooRest(Resource):
+	def __init__(self, url, user, password, **kwargs):
+		self.baseurl = url
+		self.auth = BasicAuth(user, password)
+		Resource.__init__(self, self.baseurl, follow_redirect=True, max_follow_redirect=10, filters=[self.auth], **kwargs)
 
-	def check(self):
-		auth = BasicAuth(self.user, self.passwd)
-		res = Resource(self.url, filters=[auth])
-		req = res.get('/rest/api/latest/result/PLB-CIMAINDEV?max-result=5')
+	def request(self, *args, **kwargs):
+		resp = Resource.request(self, *args, **kwargs)
+		data_body = resp.body_string()
+
+	def latestBuildSuccessful(self):
+		
+		req = self.get('/rest/api/latest/result/PLB-CIMAINDEV?max-result=5&os_authType=basic')
 		req.body_string()
 		
 		return True
@@ -27,5 +30,5 @@ class BambooRest:
 if __name__ == "__main__":
 	passwd = raw_input("Enter the password for ulr: ")
 	bamb = BambooRest('https://dev.cubx-software.com:8446', 'ulr', passwd)
-	print bamb.check()
+	print bamb.latestBuildSuccessful()
 
