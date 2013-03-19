@@ -80,7 +80,7 @@ class NokiaDisplay:
 		self.i2c.write_i2c_block_data(self.i2cSlaveAddr, 0xCA, data)
 		time.sleep(0.02)
 
-	def LoadGlyph(self, xpos, ypos, filename, updatePerLine = False): # load a glyph from the local filesystem and show it on the display
+	def LoadGlyphOld(self, xpos, ypos, filename, updatePerLine = False): # load a glyph from the local filesystem and show it on the display
 		im = Image.open(filename)
 		pix = im.load()
 		for j in range(im.size[1]):
@@ -96,6 +96,38 @@ class NokiaDisplay:
 					self.UpdateDisplay()
 					time.sleep(0.05)
 
+	def LoadGlyph(self, xpos, ypos, filename): # load a glyph from the local filesystem and show it on the display
+		im = Image.open(filename)
+		pix = im.load()
+		for j in range(32):
+			data = [j * 4, 4]
+			for i in range(4):
+				bb = 0
+				for k in range(8):
+					pixel = pix[i * 8 + k, j]
+					pxbri = pixel[0] + pixel[1] + pixel[2]	
+					if pxbri < 300:
+						bb |= 0x1 << k
+				data.append(bb)
+			self.i2c.write_i2c_block_data(self.i2cSlaveAddr, 0xD1, data) # transfer data to eeprom
+			time.sleep(0.02) # give the micro processor some time to swallow the data
+		self.i2c.write_byte(self.i2cSlaveAddr, 0xD2) # display glyph from eeprom
+		self.i2c.write_byte(self.i2cSlaveAddr, xpos)
+		self.i2c.write_byte(self.i2cSlaveAddr, ypos)
+		self.i2c.write_byte(self.i2cSlaveAddr, 0)
+
+	def LoadGlyphFromEeprom(self, xpos, ypos, addr, sizeX = 32, sizeY = 32):
+		self.i2c.write_byte(self.i2cSlaveAddr, 0xD2) # display glyph from eeprom
+		self.i2c.write_byte(self.i2cSlaveAddr, xpos)
+		self.i2c.write_byte(self.i2cSlaveAddr, ypos)
+		self.i2c.write_byte(self.i2cSlaveAddr, addr)
+		self.i2c.write_byte(self.i2cSlaveAddr, sizeX)
+		self.i2c.write_byte(self.i2cSlaveAddr, sizeY)
+
+	def AnimateGlyphsFromEeprom(self, xpos, ypos, addrs, delay, sizeX = 32, sizeY = 32):
+		date = [xpos, ypos, delay, sizeX, sizeY]
+		date.append(addrs)
+		self.i2c.write_i2c_block_data(self.i2cSlaveAddr, 0xD2, data)
 
 	def __repr__(self):
 		print "atmega interfacing a nokia display at i2c address %d" % self.i2cSlaveAddr
