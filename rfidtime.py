@@ -76,8 +76,9 @@ def main(config, opts):
 		while len(rfidtag) < 10:
 			if ser.inWaiting() == 0:
 				time.sleep(0.05)
-				if timestr != time.strftime('%x %X')[0:14]:
-					timestr = time.strftime('%x %X')[0:14]
+				tmptimestr = time.strftime('%x %X')[0:14]
+				if timestr != tmptimestr:
+					timestr = tmptimestr
 					disp.TextOut(1, 6, timestr)
 					disp.UpdateDisplay()
 

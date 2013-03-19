@@ -162,20 +162,6 @@ void HandleI2cCommands()
         case 0xB6: // startup screen    
             ShowStartupScreen();
             break;
-		case 0xB7: // show a 32x32 pixel black/white glyph (x1, y1, data[128])
-            if(recvPos < 131)
-                return;
-			for(uint8_t y=0; y<32; ++y)
-				for(uint8_t x=0; x<32; x++)
-				{
-					const uint8_t byteNum = x / 8;
-					const uint8_t bitNum  = x % 8;
-					const uint8_t bit  = recvBuffer[3 + x * 4 + byteNum];
-					const uint8_t mask = 1 << bitNum; 
-					const Nokia3310LCD::LcdPixelMode val = (bit & mask) ? Nokia3310LCD::PIXEL_ON : Nokia3310LCD::PIXEL_OFF;
-					disp.LcdPixel(x + recvBuffer[1], y + recvBuffer[2], val);
-				}
-            break;
         case 0xC1: // backlight on     
             digitalWrite(LCD_BACKLIGHT, HIGH);
             break;
@@ -206,13 +192,15 @@ void HandleI2cCommands()
             tone(PIEZO_BUZZER, frequ, dur);
             break;
         }
-		case 0xD1: // data to eeprom (addr, data[32])
+		case 0xD1: // data to eeprom (addr, size, data)
 		{
-            if(recvPos < 33)
+            if(recvPos < 3 || recvPos < 3 + recvBuffer[2])
                 return;
-			const uint8_t addr = recvBuffer[1];
-			for(uint8_t i=0; i<32; ++i)
-				EEPROM.write(addr + i, recvBuffer[2 + i]);
+			const uint8_t addr  = recvBuffer[1];
+			const uint8_t count = recvBuffer[2];
+			for(uint8_t i=0; i<count; ++i)
+				EEPROM.write(addr + i, recvBuffer[3 + i]);
+			break;
 		}
 		case 0xD2: // display glyph from eeprom (xpos, ypos, addr)
 		{
@@ -222,16 +210,19 @@ void HandleI2cCommands()
 			const uint8_t ypos = recvBuffer[2];
 			const uint8_t addr = recvBuffer[3];
 			for(uint8_t y=0; y<32; ++y)
+			{
 				for(uint8_t x=0; x<32; x++)
 				{
 					const uint8_t byteNum = x / 8;
 					const uint8_t bitNum  = x % 8;
-					const uint8_t byteVal = EEPROM.read(addr + 3 + x * 4 + byteNum);
+					const uint8_t byteVal = EEPROM.read(addr + y * 4 + byteNum);
 					const uint8_t mask = 1 << bitNum; 
 					const Nokia3310LCD::LcdPixelMode val = (byteVal & mask) ? Nokia3310LCD::PIXEL_ON : Nokia3310LCD::PIXEL_OFF;
 					disp.LcdPixel(x + xpos, y + ypos, val);
 				}
-				
+			}
+			disp.LcdUpdate();
+			break;
 		}
         default:
             // invalid command. just reset below          
