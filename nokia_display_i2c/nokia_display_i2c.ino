@@ -56,6 +56,7 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <Wire.h>
+#include <EEPROM.h>
 
 Nokia3310LCD  disp(9, 8, 7);
 const uint8_t LCD_BACKLIGHT = A0;
@@ -64,7 +65,7 @@ const uint8_t LED_GREEN = 6;
 const uint8_t LED_BLUE  = 3;
 const uint8_t PIEZO_BUZZER = 4;
 
-uint8_t recvBuffer[32];
+uint8_t recvBuffer[135];
 uint8_t recvPos;
 unsigned long recvLast;
 
@@ -138,7 +139,7 @@ void HandleI2cCommands()
                 return;     
             disp.LcdContrast(recvBuffer[1]);
             break;
-        case 0xB3: // write text at a given position
+        case 0xB3: // write text at a given position (xpos, ypos, text, big)
             if(recvPos < 5 || recvPos < 5 + recvBuffer[4])
                 return;
             disp.LcdGotoXYFont(recvBuffer[1], recvBuffer[2]);
@@ -146,13 +147,13 @@ void HandleI2cCommands()
             disp.LcdStr(recvBuffer[3] ? Nokia3310LCD::FONT_2X : Nokia3310LCD::FONT_1X, 
                         reinterpret_cast<char*>(recvBuffer + 5));
             break;
-        case 0xB4: // set a single pixel : 0:white  1:black  2:xor
+        case 0xB4: // set a single pixel : 0:white  1:black  2:xor  (xpos, ypos, val)
             if(recvPos < 4)
                 return;     
             disp.LcdPixel(recvBuffer[1], recvBuffer[2], 
                   recvBuffer[3] == 1 ? Nokia3310LCD::PIXEL_ON : recvBuffer[3] == 2 ? Nokia3310LCD::PIXEL_XOR : Nokia3310LCD::PIXEL_OFF);
             break;
-        case 0xB5: // line
+        case 0xB5: // line (x1, y1, x2, y2, val)
             if(recvPos < 6)
                 return;    
             disp.LcdLine(recvBuffer[1], recvBuffer[3], recvBuffer[2], recvBuffer[4], 
@@ -160,6 +161,20 @@ void HandleI2cCommands()
             break;
         case 0xB6: // startup screen    
             ShowStartupScreen();
+            break;
+		case 0xB7: // show a 32x32 pixel black/white glyph (x1, y1, data[128])
+            if(recvPos < 131)
+                return;
+			for(uint8_t y=0; y<32; ++y)
+				for(uint8_t x=0; x<32; x++)
+				{
+					const uint8_t byteNum = x / 8;
+					const uint8_t bitNum  = x % 8;
+					const uint8_t bit  = recvBuffer[3 + x * 4 + byteNum];
+					const uint8_t mask = 1 << bitNum; 
+					const Nokia3310LCD::LcdPixelMode val = (bit & mask) ? Nokia3310LCD::PIXEL_ON : Nokia3310LCD::PIXEL_OFF;
+					disp.LcdPixel(x + recvBuffer[1], y + recvBuffer[2], val);
+				}
             break;
         case 0xC1: // backlight on     
             digitalWrite(LCD_BACKLIGHT, HIGH);
@@ -191,6 +206,33 @@ void HandleI2cCommands()
             tone(PIEZO_BUZZER, frequ, dur);
             break;
         }
+		case 0xD1: // data to eeprom (addr, data[32])
+		{
+            if(recvPos < 33)
+                return;
+			const uint8_t addr = recvBuffer[1];
+			for(uint8_t i=0; i<32; ++i)
+				EEPROM.write(addr + i, recvBuffer[2 + i]);
+		}
+		case 0xD2: // display glyph from eeprom (xpos, ypos, addr)
+		{
+            if(recvPos < 4)
+                return;
+			const uint8_t xpos = recvBuffer[1];
+			const uint8_t ypos = recvBuffer[2];
+			const uint8_t addr = recvBuffer[3];
+			for(uint8_t y=0; y<32; ++y)
+				for(uint8_t x=0; x<32; x++)
+				{
+					const uint8_t byteNum = x / 8;
+					const uint8_t bitNum  = x % 8;
+					const uint8_t byteVal = EEPROM.read(addr + 3 + x * 4 + byteNum);
+					const uint8_t mask = 1 << bitNum; 
+					const Nokia3310LCD::LcdPixelMode val = (byteVal & mask) ? Nokia3310LCD::PIXEL_ON : Nokia3310LCD::PIXEL_OFF;
+					disp.LcdPixel(x + xpos, y + ypos, val);
+				}
+				
+		}
         default:
             // invalid command. just reset below          
             digitalWrite(LED_RED, LOW);
