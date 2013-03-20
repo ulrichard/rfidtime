@@ -98,6 +98,7 @@ class NokiaDisplay:
 
 	def LoadGlyph(self, xpos, ypos, filename): # load a glyph from the local filesystem and show it on the display
 		self.GlyphToEeprom(filename, 0) 
+		im = Image.open(filename)
 		self.LoadGlyphFromEeprom(xpos, ypos, 0, im.size[0], im.size[1])
 
 	def GlyphToEeprom(self, filename, addr):
@@ -123,23 +124,21 @@ class NokiaDisplay:
 				data.append(bb)
 		#	print data
 			self.i2c.write_i2c_block_data(self.i2cSlaveAddr, 0xD1, data) # transfer data to eeprom
-			time.sleep(0.025) # give the micro processor some time to swallow the data
+			time.sleep(0.028) # give the micro processor some time to swallow the data
 
 
 	def LoadGlyphFromEeprom(self, xpos, ypos, addr, sizeX = 32, sizeY = 32):
-		self.i2c.write_byte(self.i2cSlaveAddr, 0xD2) # display glyph from eeprom
-		self.i2c.write_byte(self.i2cSlaveAddr, xpos)
-		self.i2c.write_byte(self.i2cSlaveAddr, ypos)
-		self.i2c.write_byte(self.i2cSlaveAddr, addr)
-		self.i2c.write_byte(self.i2cSlaveAddr, sizeX)
-		self.i2c.write_byte(self.i2cSlaveAddr, sizeY)
+		data = [xpos, ypos, addr >> 8, addr & 0xFF, sizeX, sizeY]
+		self.i2c.write_i2c_block_data(self.i2cSlaveAddr, 0xD2, data)
+		print data
+		time.sleep(0.02) # give the micro processor some time to swallow the data
 
-	def AnimateGlyphsFromEeprom(self, xpos, ypos, addrs, delay, numloops, sizeX = 32, sizeY = 32):
-		data = [xpos, ypos, delay, numloops, sizeX, sizeY, len(addrs)]
-		for i in range(len(addrs)):
-			data.append(addrs[i] >> 8)
-			data.append(addrs[i] & 0xFF)
-		self.i2c.write_i2c_block_data(self.i2cSlaveAddr, 0xD3, data)
+#	def AnimateGlyphsFromEeprom(self, xpos, ypos, addrs, delay, numloops, sizeX = 32, sizeY = 32):
+#		data = [xpos, ypos, delay, numloops, sizeX, sizeY, len(addrs)]
+#		for i in range(len(addrs)):
+#			data.append(addrs[i] >> 8)
+#			data.append(addrs[i] & 0xFF)
+#		self.i2c.write_i2c_block_data(self.i2cSlaveAddr, 0xD3, data)
 
 	def __repr__(self):
 		print "atmega interfacing a nokia display at i2c address %d" % self.i2cSlaveAddr
@@ -176,7 +175,6 @@ if __name__ == "__main__":
 	im = Image.open(filename)
 	print filename, "  ",  im.size
 	disp.LoadGlyph(5, 14, filename)
-	time.sleep(0.5)
 	disp.GlyphToEeprom('glyph/Richard.Ulrich.png', 0)
 	disp.GlyphToEeprom('glyph/Andreas.Burch.png', 128)
 	disp.GlyphToEeprom('glyph/Gabriel.Bocek.png', 256)
