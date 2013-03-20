@@ -65,7 +65,7 @@ const uint8_t LED_GREEN = 6;
 const uint8_t LED_BLUE  = 3;
 const uint8_t PIEZO_BUZZER = 4;
 
-uint8_t recvBuffer[135];
+uint8_t recvBuffer[70];
 uint8_t recvPos;
 unsigned long recvLast;
 
@@ -91,10 +91,10 @@ void setup()
     SPI.setClockDivider(SPI_CLOCK_DIV32); // 500 kHz
  
 	// slow down the i2c bus to match the bifferboard
-	const uint16_t CPU_FREQ = 8000000L;
-	const uint16_t TWI_FREQ =   32500L;
+//	const uint16_t CPU_FREQ = 8000000L;
+//	const uint16_t TWI_FREQ =   32500L;
 //	TWBR = ((CPU_FREQ / TWI_FREQ) - 16) / 2;
-	TWBR = 128;
+//	TWBR = 128;
 
     disp.init();
     disp.LcdContrast(0x40);   
@@ -110,6 +110,33 @@ void setup()
 void loop()                     
 {
     HandleI2cCommands();
+}
+
+void DisplayGlyphFromEeprom(const uint8_t xpos, const uint8_t ypos, const uint16_t addr, const uint8_t xsize, const uint8_t ysize)
+{
+	const uint8_t bytesPerRow = (static_cast<float>(xsize) + 0.501) / 8;
+/*
+	if(addr + ysize * bytesPerRow >= 512 * 1024) // the AtMega8 has 512k of EEPROM
+	{
+		digitalWrite(LED_RED, LOW);
+        delay(50);
+        digitalWrite(LED_RED, HIGH);
+		return;
+	}
+*/	
+	for(uint8_t y=0; y<ysize; ++y)
+	{
+		for(uint8_t x=0; x<xsize; x++)
+		{
+			const uint8_t byteNum = x / 8;
+			const uint8_t bitNum  = x % 8;
+			const uint8_t byteVal = EEPROM.read(addr + y * bytesPerRow + byteNum);
+			const uint8_t mask = 1 << bitNum; 
+			const Nokia3310LCD::LcdPixelMode val = (byteVal & mask) ? Nokia3310LCD::PIXEL_ON : Nokia3310LCD::PIXEL_OFF;
+			disp.LcdPixel(x + xpos, y + ypos, val);
+		}
+	}
+	disp.LcdUpdate();
 }
 
 void HandleI2cCommands()
@@ -194,36 +221,42 @@ void HandleI2cCommands()
         }
 		case 0xD1: // data to eeprom (addr, size, data)
 		{
-            if(recvPos < 3 || recvPos < 3 + recvBuffer[2])
+            if(recvPos < 4 || recvPos < 4 + recvBuffer[3])
                 return;
-			const uint8_t addr  = recvBuffer[1];
-			const uint8_t count = recvBuffer[2];
+			const uint16_t addr  = recvBuffer[1] << 8 + recvBuffer[2];
+			const uint8_t  count = recvBuffer[3];
 			for(uint8_t i=0; i<count; ++i)
-				EEPROM.write(addr + i, recvBuffer[3 + i]);
+				EEPROM.write(addr + i, recvBuffer[4 + i]);
 			break;
 		}
-		case 0xD2: // display glyph from eeprom (xpos, ypos, addr)
+		case 0xD2: // display glyph from eeprom (xpos, ypos, addr, xsize, ysize)
 		{
-            if(recvPos < 4)
+            if(recvPos < 7)
                 return;
-			const uint8_t xpos = recvBuffer[1];
-			const uint8_t ypos = recvBuffer[2];
-			const uint8_t addr = recvBuffer[3];
-			for(uint8_t y=0; y<32; ++y)
-			{
-				for(uint8_t x=0; x<32; x++)
-				{
-					const uint8_t byteNum = x / 8;
-					const uint8_t bitNum  = x % 8;
-					const uint8_t byteVal = EEPROM.read(addr + y * 4 + byteNum);
-					const uint8_t mask = 1 << bitNum; 
-					const Nokia3310LCD::LcdPixelMode val = (byteVal & mask) ? Nokia3310LCD::PIXEL_ON : Nokia3310LCD::PIXEL_OFF;
-					disp.LcdPixel(x + xpos, y + ypos, val);
-				}
-			}
-			disp.LcdUpdate();
+
+			DisplayGlyphFromEeprom(recvBuffer[1], recvBuffer[2], static_cast<uint16_t>(recvBuffer[3]) << 8 + recvBuffer[4], recvBuffer[5], recvBuffer[6]);
+
 			break;
 		}
+/*
+		case 0xD3: // display animation from eeprom (xpos, ypos, delay, numloops, xsize, ysize, imgcount, addresses[])
+		{
+            if(recvPos < 8 || recvPos < 8 + recvBuffer[7] * 2)
+                return;
+			const uint8_t delay10 = recvBuffer[3];
+			const uint8_t numloop = recvBuffer[4];
+			const uint8_t imgcnt  = recvBuffer[7];
+
+			for(uint8_t l=0; l<numloop; ++l)
+				for(uint8_t i=0; i<imgcnt; ++i)
+				{
+					const uint8_t addr = recvBuffer[8 + 2 * i] << 8 + recvBuffer[8 + 2 * i + 1];
+					DisplayGlyphFromEeprom(recvBuffer[1], recvBuffer[2], addr, recvBuffer[5], recvBuffer[6]);
+					delay(delay10 * 10);
+				}
+
+		}
+*/
         default:
             // invalid command. just reset below          
             digitalWrite(LED_RED, LOW);
