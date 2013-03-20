@@ -112,25 +112,18 @@ void loop()
     HandleI2cCommands();
 }
 
-void DisplayGlyphFromEeprom(const uint8_t xpos, const uint8_t ypos, const uint16_t addr, const uint8_t xsize, const uint8_t ysize)
+void DisplayGlyphFromEeprom(const uint8_t xpos, const uint8_t ypos, const int addr, const uint8_t xsize, const uint8_t ysize)
 {
-	const uint8_t bytesPerRow = (static_cast<float>(xsize) + 0.501) / 8;
-/*
-	if(addr + ysize * bytesPerRow >= 512 * 1024) // the AtMega8 has 512k of EEPROM
-	{
-		digitalWrite(LED_RED, LOW);
-        delay(50);
-        digitalWrite(LED_RED, HIGH);
-		return;
-	}
-*/	
+	const uint8_t bytesPerRow = ceil(xsize / 8.0);
+
 	for(uint8_t y=0; y<ysize; ++y)
 	{
 		for(uint8_t x=0; x<xsize; x++)
 		{
 			const uint8_t byteNum = x / 8;
 			const uint8_t bitNum  = x % 8;
-			const uint8_t byteVal = EEPROM.read(addr + y * bytesPerRow + byteNum);
+			const int     currAddr = addr + y * bytesPerRow + byteNum;
+			const uint8_t byteVal = EEPROM.read(currAddr);
 			const uint8_t mask = 1 << bitNum; 
 			const Nokia3310LCD::LcdPixelMode val = (byteVal & mask) ? Nokia3310LCD::PIXEL_ON : Nokia3310LCD::PIXEL_OFF;
 			disp.LcdPixel(x + xpos, y + ypos, val);
@@ -223,10 +216,15 @@ void HandleI2cCommands()
 		{
             if(recvPos < 4 || recvPos < 4 + recvBuffer[3])
                 return;
-			const uint16_t addr  = static_cast<uint16_t>(recvBuffer[1]) << 8 + recvBuffer[2];
-			const uint8_t  count = recvBuffer[3];
+			const int     addr  = static_cast<uint16_t>(recvBuffer[1]) << 8 + recvBuffer[2];
+			const uint8_t count = recvBuffer[3];
+
 			for(uint8_t i=0; i<count; ++i)
-				EEPROM.write(addr + i, recvBuffer[4 + i]);
+			{
+				const int     currAddr = addr + i;
+				const uint8_t val      = recvBuffer[4 + i];
+				EEPROM.write(currAddr, val);
+			}
 			break;
 		}
 		case 0xD2: // display glyph from eeprom (xpos, ypos, addr, xsize, ysize)
@@ -234,8 +232,8 @@ void HandleI2cCommands()
             if(recvPos < 7)
                 return;
 
-			DisplayGlyphFromEeprom(recvBuffer[1], recvBuffer[2], static_cast<uint16_t>(recvBuffer[3]) << 8 + recvBuffer[4], recvBuffer[5], recvBuffer[6]);
-
+			const int addr = static_cast<uint16_t>(recvBuffer[3]) << 8 + recvBuffer[4];
+			DisplayGlyphFromEeprom(recvBuffer[1], recvBuffer[2], addr, recvBuffer[5], recvBuffer[6]);
 			break;
 		}
 /*
