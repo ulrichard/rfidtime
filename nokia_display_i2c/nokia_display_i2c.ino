@@ -215,7 +215,7 @@ void HandleI2cCommands()
             if(recvPos < 5)
                 return;
             const uint16_t frequ = static_cast<uint16_t>(recvBuffer[1]) << 8 + recvBuffer[2];
-            const uint16_t dur   = static_cast<uint16_t>(recvBuffer[3]) << 8 + recvBuffer[4];     
+            const uint16_t dur   = static_cast<uint16_t>(recvBuffer[3]) << 8 + recvBuffer[4];
             tone(PIEZO_BUZZER, frequ, dur);
             break;
         }
@@ -223,7 +223,7 @@ void HandleI2cCommands()
 		{
             if(recvPos < 4 || recvPos < 4 + recvBuffer[3])
                 return;
-			const uint16_t addr  = recvBuffer[1] << 8 + recvBuffer[2];
+			const uint16_t addr  = static_cast<uint16_t>(recvBuffer[1]) << 8 + recvBuffer[2];
 			const uint8_t  count = recvBuffer[3];
 			for(uint8_t i=0; i<count; ++i)
 				EEPROM.write(addr + i, recvBuffer[4 + i]);
@@ -250,7 +250,7 @@ void HandleI2cCommands()
 			for(uint8_t l=0; l<numloop; ++l)
 				for(uint8_t i=0; i<imgcnt; ++i)
 				{
-					const uint8_t addr = recvBuffer[8 + 2 * i] << 8 + recvBuffer[8 + 2 * i + 1];
+					const uint8_t addr = static_cast<uint16_t>(recvBuffer[8 + 2 * i]) << 8 + recvBuffer[8 + 2 * i + 1];
 					DisplayGlyphFromEeprom(recvBuffer[1], recvBuffer[2], addr, recvBuffer[5], recvBuffer[6]);
 					delay(delay10 * 10);
 				}
