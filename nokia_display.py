@@ -1,7 +1,7 @@
 #! /usr/bin/python
 # script to send commands to the nokia display over i2c
 
-import smbus, time
+import smbus, time, math
 from PIL import Image
 
 class NokiaDisplay:
@@ -97,24 +97,34 @@ class NokiaDisplay:
 					time.sleep(0.05)
 
 	def LoadGlyph(self, xpos, ypos, filename): # load a glyph from the local filesystem and show it on the display
+		self.GlyphToEeprom(filename, 0) 
+		self.LoadGlyphFromEeprom(xpos, ypos, 0, im.size[0], im.size[1])
+
+	def GlyphToEeprom(self, filename, addr):
 		im = Image.open(filename)
 		pix = im.load()
-		for j in range(32):
-			data = [j * 4, 4]
-			for i in range(4):
+		for j in range(im.size[1]): # for all rows
+			bytesPerRow = int(math.ceil(float(im.size[0]) / 8))
+			curraddr = addr + j * bytesPerRow
+			data = [curraddr >> 8, curraddr & 0xFF, bytesPerRow] # address, num bytes
+			for i in range(bytesPerRow):
 				bb = 0
-				for k in range(8):
-					pixel = pix[i * 8 + k, j]
-					pxbri = pixel[0] + pixel[1] + pixel[2]	
-					if pxbri < 300:
-						bb |= 0x1 << k
+				for k in range(8): # for every bit in the byte
+					xx = i * 8 + k
+					if xx < im.size[0]:
+						pixel = pix[xx, j]
+						if im.mode != 'P':
+							pxbri = pixel[0] + pixel[1] + pixel[2]	
+							if pxbri < 300:
+								bb |= 0x1 << k
+						else:
+							if pixel != 0:
+								bb |= 0x1 << k
 				data.append(bb)
+		#	print data
 			self.i2c.write_i2c_block_data(self.i2cSlaveAddr, 0xD1, data) # transfer data to eeprom
-			time.sleep(0.02) # give the micro processor some time to swallow the data
-		self.i2c.write_byte(self.i2cSlaveAddr, 0xD2) # display glyph from eeprom
-		self.i2c.write_byte(self.i2cSlaveAddr, xpos)
-		self.i2c.write_byte(self.i2cSlaveAddr, ypos)
-		self.i2c.write_byte(self.i2cSlaveAddr, 0)
+			time.sleep(0.025) # give the micro processor some time to swallow the data
+
 
 	def LoadGlyphFromEeprom(self, xpos, ypos, addr, sizeX = 32, sizeY = 32):
 		self.i2c.write_byte(self.i2cSlaveAddr, 0xD2) # display glyph from eeprom
@@ -124,10 +134,12 @@ class NokiaDisplay:
 		self.i2c.write_byte(self.i2cSlaveAddr, sizeX)
 		self.i2c.write_byte(self.i2cSlaveAddr, sizeY)
 
-	def AnimateGlyphsFromEeprom(self, xpos, ypos, addrs, delay, sizeX = 32, sizeY = 32):
-		date = [xpos, ypos, delay, sizeX, sizeY]
-		date.append(addrs)
-		self.i2c.write_i2c_block_data(self.i2cSlaveAddr, 0xD2, data)
+	def AnimateGlyphsFromEeprom(self, xpos, ypos, addrs, delay, numloops, sizeX = 32, sizeY = 32):
+		data = [xpos, ypos, delay, numloops, sizeX, sizeY, len(addrs)]
+		for i in range(len(addrs)):
+			data.append(addrs[i] >> 8)
+			data.append(addrs[i] & 0xFF)
+		self.i2c.write_i2c_block_data(self.i2cSlaveAddr, 0xD3, data)
 
 	def __repr__(self):
 		print "atmega interfacing a nokia display at i2c address %d" % self.i2cSlaveAddr
@@ -138,10 +150,10 @@ class NokiaDisplay:
 if __name__ == "__main__":
 	disp = NokiaDisplay(0x19, 0) # bus is 0 on the alix, and 1 on the raspbe
 	disp.Backlight(True)
-	disp.LedBlue(200)
+	disp.LedBlue(130)
 	disp.ClearDisplay()
 	disp.UpdateDisplay()
-	time.sleep(1.0)
+	time.sleep(0.5)
 	disp.LedBlue(0)
 	disp.StartScreen()
 	disp.UpdateDisplay()
@@ -153,16 +165,24 @@ if __name__ == "__main__":
 	disp.LineOut(5, 5, 40, 20, 1)
 	disp.UpdateDisplay()
 	time.sleep(0.3)
-	disp.TextOut(2, 2, "Hello World")
+	disp.TextOut(4, 1, "Hello World")
 	disp.UpdateDisplay()
 	time.sleep(0.02)
 	filename = 'glyph/beer32.png'
 	im = Image.open(filename)
-	print im.size
-	pix = im.load()
-	disp.LoadGlyph(50, 14, filename, True)
-	disp.UpdateDisplay()
-	time.sleep(0.2)
+	print filename, "  ",  im.size
+	disp.LoadGlyph(50, 14, filename)
+	filename = 'glyph/Richard.Ulrich.png'
+	im = Image.open(filename)
+	print filename, "  ",  im.size
+	disp.LoadGlyph(5, 14, filename)
+	time.sleep(0.5)
+	disp.GlyphToEeprom('glyph/Richard.Ulrich.png', 0)
+	disp.GlyphToEeprom('glyph/Andreas.Burch.png', 128)
+	disp.GlyphToEeprom('glyph/Gabriel.Bocek.png', 256)
+	disp.GlyphToEeprom('glyph/Reto.Conconi.png', 384)
+	addrs = [0, 128]
+#	disp.AnimateGlyphsFromEeprom(5, 14, addrs, 20, 3, 23, 32)
 	disp.Backlight(False)	
 
 
