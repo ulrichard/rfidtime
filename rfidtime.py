@@ -167,9 +167,10 @@ def notification(who, what, color, configval):
 		elif(color == 'red'):
 			disp.LedRed(130)
 		if(color == 'blue'):
-			disp.LoadGlyphFromEeprom(55, 10, glyphAddr['glyph/factory32.png'], 32, 32)
+			disp.LoadGlyphFromEeprom(55, 8, glyphAddr['glyph/factory32.png'], 32, 32)
 		elif(color == 'green'):
-			disp.LoadGlyphFromEeprom(55, 10, glyphAddr['glyph/beer32.png'], 32, 32)
+			disp.LoadGlyphFromEeprom(55, 8, glyphAddr['glyph/beer32.png'], 32, 32)
+		time.sleep(0.2)
 		disp.LedRed(0)
 		disp.LedGreen(0)
 		disp.LedBlue(0)
@@ -185,12 +186,14 @@ def notification(who, what, color, configval):
 						addr = v + 128
 				disp.GlyphToEeprom(portrait, addr)
 				glyphAddr[portrait] = addr
-			positions = [20, 14, 24, 14, 28, 14, 32, 14, 36, 14, 40, 14]
+			positions = [20, 8, 24, 8, 28, 8, 32, 8, 36, 8, 40, 8]
 			addrs = [addr, addr, addr, addr, addr, addr]
 			disp.AnimateGlyphsFromEeprom(1, 10, positions, addrs, 23, 32)
 			disp.TextOut(1, 1, who)
 			disp.TextOut(1, 2, what)
 			disp.TextOut(1, 6, time.strftime('%x %X')[0:14])
+		else:
+			print 'file not found : ', portrait
 		time.sleep(3.0)
 		disp.Backlight(False)
 		disp.StartScreen()
