@@ -17,6 +17,7 @@ from nokia_display import NokiaDisplay
 #with daemon.DaemonContext():
 #    do_main_program()
 
+glyphAddr = {}
 
 def main(config, opts):
 	configval = config.values('__main__')
@@ -40,6 +41,10 @@ def main(config, opts):
 		disp.LedRed(0)
 		disp.LedGreen(0)
 		disp.LedBlue(0)
+		disp.GlyphToEeprom('glyph/factory32.png', 256)
+		disp.GlyphToEeprom('glyph/beer32.png', 384)
+		glyphAddr['glyph/factory32.png'] = 256
+		glyphAddr['glyph/beer32.png'] = 384
 
 	# connect to the database
 	print "connecting to the database"
@@ -145,7 +150,7 @@ def open_or_close_time_record(dbconn, userid, configval):
 			dbconn.commit()
 		else:
 			dbconn.rollback()
-	
+
 def notification(who, what, color, configval):
 	if configval.get('useNokiaDisplay'):
 		disp = NokiaDisplay(0x19, configval.get('NokiaDisplayBus'))
@@ -161,14 +166,31 @@ def notification(who, what, color, configval):
 			disp.LedGreen(130)
 		elif(color == 'red'):
 			disp.LedRed(130)
-		time.sleep(0.3)
+		if(color == 'blue'):
+			disp.LoadGlyphFromEeprom(55, 10, glyphAddr['glyph/factory32.png'], 32, 32)
+		elif(color == 'green'):
+			disp.LoadGlyphFromEeprom(55, 10, glyphAddr['glyph/beer32.png'], 32, 32)
 		disp.LedRed(0)
 		disp.LedGreen(0)
 		disp.LedBlue(0)
-		if(color == 'blue'):
-			disp.LoadGlyph(40, 10, 'glyph/factory32.png', True)
-		elif(color == 'green'):
-			disp.LoadGlyph(40, 10, 'glyph/beer32.png', True)
+		portrait = 'glyph/%s.png' % who
+		if os.path.exists(portrait):
+			addr = 0
+			if portrait in glyphAddr:
+				addr = glyphAddr[portrait]
+			else:
+				addr = 256
+				for k, v in glyphAddr.iteritems():
+					if v >= addr:
+						addr = v + 128
+				disp.GlyphToEeprom(portrait, addr)
+				glyphAddr[portrait] = addr
+			positions = [20, 14, 24, 14, 28, 14, 32, 14, 36, 14, 40, 14]
+			addrs = [addr, addr, addr, addr, addr, addr]
+			disp.AnimateGlyphsFromEeprom(1, 10, positions, addrs, 23, 32)
+			disp.TextOut(1, 1, who)
+			disp.TextOut(1, 2, what)
+			disp.TextOut(1, 6, time.strftime('%x %X')[0:14])
 		time.sleep(3.0)
 		disp.Backlight(False)
 		disp.StartScreen()
