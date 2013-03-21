@@ -57,13 +57,22 @@
 #include <SPI.h>
 #include <Wire.h>
 #include <EEPROM.h>
+#include <Streaming.h>
+
+//#define ENABLE_STARTSCREEN
+#define ENABLE_SERIAL_DBG
+//#define ENABLE_SERIAL_INP
+//#define ENABLE_BUZZER
+//#define ENABLE_ANIMATION
 
 Nokia3310LCD  disp(9, 8, 7);
 const uint8_t LCD_BACKLIGHT = A0;
 const uint8_t LED_RED   = 5;
 const uint8_t LED_GREEN = 6;
 const uint8_t LED_BLUE  = 3;
+#ifdef ENABLE_BUZZER
 const uint8_t PIEZO_BUZZER = 4;
+#endif
 
 uint8_t recvBuffer[70];
 uint8_t recvPos;
@@ -82,29 +91,33 @@ void setup()
     digitalWrite(LED_RED,   HIGH);
     digitalWrite(LED_GREEN, HIGH);
     digitalWrite(LED_BLUE,  HIGH);
+#ifdef ENABLE_BUZZER
     pinMode(PIEZO_BUZZER, OUTPUT);
+#endif
+
+#ifdef ENABLE_SERIAL_DBG
+    Serial.begin(115200);
+#elif ENABLE_SERIAL_INP
+	Serial.begin(115200);
+#endif
     
     Wire.begin(0x19); // join i2c bus with address #0x19
     Wire.onReceive(receiveI2C); // register event
    
     SPI.begin();
     SPI.setClockDivider(SPI_CLOCK_DIV32); // 500 kHz
- 
-	// slow down the i2c bus to match the bifferboard
-//	const uint16_t CPU_FREQ = 8000000L;
-//	const uint16_t TWI_FREQ =   32500L;
-//	TWBR = ((CPU_FREQ / TWI_FREQ) - 16) / 2;
-//	TWBR = 128;
 
     disp.init();
-    disp.LcdContrast(0x40);   
+    disp.LcdContrast(0x40);
     ShowStartupScreen();
 
 	// give some hints to guess if the clock speed is accurate
+#ifdef ENABLE_BUZZER
 	tone(PIEZO_BUZZER, 2000, 500);
-	analogWrite(LED_RED, 120);
+#endif
+	analogWrite(LED_GREEN, 120);
 	delay(1000);
-    digitalWrite(LED_RED, HIGH);
+    digitalWrite(LED_GREEN, HIGH);
 }
 
 void loop()                     
@@ -134,6 +147,16 @@ void DisplayGlyphFromEeprom(const uint8_t xpos, const uint8_t ypos, const int ad
 
 void HandleI2cCommands()
 {
+#ifdef ENABLE_SERIAL_INP
+	while(Serial.available())
+	{
+		const uint8_t val = Serial.read();
+        if(recvPos + 1 < sizeof(recvBuffer))
+            recvBuffer[recvPos++] = val;
+		recvLast = millis();
+	}
+#endif
+
     if(recvPos < 1)
         return;        
     if(recvLast + 3000 < millis())
@@ -151,7 +174,7 @@ void HandleI2cCommands()
         case 0xB0: // sets all pixels to white     
             disp.LcdClear();
             break;
-        case 0xB1: // send buffer to the LCD    
+        case 0xB1: // send frame buffer to the LCD    
             disp.LcdUpdate();
             break;
         case 0xB2: // adjust the contrast. max is 0x7F
@@ -203,6 +226,7 @@ void HandleI2cCommands()
                 return;
             analogWrite(LED_BLUE, 255 - recvBuffer[1]);
             break;
+#ifdef ENABLE_BUZZER
         case 0xCA: // play a tone on the piezo buzzer
         {
             if(recvPos < 5)
@@ -212,19 +236,28 @@ void HandleI2cCommands()
             tone(PIEZO_BUZZER, frequ, dur);
             break;
         }
+#endif
 		case 0xD1: // data to eeprom (addr, size, data)
 		{
             if(recvPos < 4 || recvPos < 4 + recvBuffer[3])
                 return;
 			const int     addr  = static_cast<uint16_t>(recvBuffer[1]) << 8 + recvBuffer[2];
 			const uint8_t count = recvBuffer[3];
-
+#ifdef ENABLE_SERIAL_DBG
+			Serial << "Received " << _DEC(addr) << ":\n";
+#endif
 			for(uint8_t i=0; i<count; ++i)
 			{
 				const int     currAddr = addr + i;
 				const uint8_t val      = recvBuffer[4 + i];
 				EEPROM.write(currAddr, val);
+#ifdef ENABLE_SERIAL_DBG
+				Serial << _HEX(val) << "  ";
+#endif
 			}
+#ifdef ENABLE_SERIAL_DBG
+			Serial << "\n";
+#endif
 			break;
 		}
 		case 0xD2: // display glyph from eeprom (xpos, ypos, addr, xsize, ysize)
@@ -234,9 +267,12 @@ void HandleI2cCommands()
 
 			const int addr = static_cast<uint16_t>(recvBuffer[3]) << 8 + recvBuffer[4];
 			DisplayGlyphFromEeprom(recvBuffer[1], recvBuffer[2], addr, recvBuffer[5], recvBuffer[6]);
+#ifdef ENABLE_SERIAL_DBG
+			Serial << "Displaying " << _DEC(addr) << "\n";
+#endif
 			break;
 		}
-/*
+#ifdef ENABLE_ANIMATION
 		case 0xD3: // display animation from eeprom (xpos, ypos, delay, numloops, xsize, ysize, imgcount, addresses[])
 		{
             if(recvPos < 8 || recvPos < 8 + recvBuffer[7] * 2)
@@ -254,7 +290,26 @@ void HandleI2cCommands()
 				}
 
 		}
-*/
+#endif
+#ifdef ENABLE_SERIAL_DBG
+		case 0xE1: // dump data from eeprom to serial for debugging (addr, size)
+		{
+            if(recvPos < 3)
+                return;
+			const int     addr  = static_cast<uint16_t>(recvBuffer[1]) << 8 + recvBuffer[2];
+			const uint8_t count = recvBuffer[3];
+			Serial << "Dumping " << _DEC(count) << "bytes at EEPROM " << _HEX(addr) << "\n";
+
+			for(uint8_t i=0; i<count; ++i)
+			{
+				const int     currAddr = addr + i;
+				const uint8_t val      = EEPROM.read(currAddr);
+				Serial << _HEX(val) << "  ";
+			}
+			Serial << "\n";
+			break;
+		}
+#endif
         default:
             // invalid command. just reset below          
             digitalWrite(LED_RED, LOW);
@@ -284,6 +339,7 @@ void ShowStartupScreen()
     disp.LcdClear();
     disp.LcdGotoXYFont(1, 1);
     disp.LcdStr(Nokia3310LCD::FONT_1X, "Borm ERP");
+#ifdef ENABLE_STARTSCREEN
     disp.LcdGotoXYFont(1, 3);
     disp.LcdStr(Nokia3310LCD::FONT_2X, "rfid");
     disp.LcdGotoXYFont(6, 5);
@@ -299,6 +355,7 @@ void ShowStartupScreen()
     disp.LcdLine(76, 76,  7, 18, Nokia3310LCD::PIXEL_ON);
     disp.LcdLine(65, 65, 10, 21, Nokia3310LCD::PIXEL_ON);
     disp.LcdLine(71, 76,  2,  7, Nokia3310LCD::PIXEL_ON);
+#endif
     disp.LcdUpdate();
 }
 
