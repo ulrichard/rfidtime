@@ -80,34 +80,24 @@ class NokiaDisplay:
 		self.i2c.write_i2c_block_data(self.i2cSlaveAddr, 0xCA, data)
 		time.sleep(0.02)
 
-	def LoadGlyphOld(self, xpos, ypos, filename, updatePerLine = False): # load a glyph from the local filesystem and show it on the display
-		im = Image.open(filename)
-		pix = im.load()
-		for j in range(im.size[1]):
-			for i in range(im.size[0]):
-				pixel = pix[i, j]
-				pxbri = pixel[0] + pixel[1] + pixel[2]	
-				if pxbri < 300:
-					self.SetPixel(xpos + i, ypos + j, 1)	
-#				else:
-#					self.SetPixel(xpos + i, ypos + j, 0)	
-			if updatePerLine:
-				if j % 4 == 0:
-					self.UpdateDisplay()
-					time.sleep(0.05)
-
 	def LoadGlyph(self, xpos, ypos, filename): # load a glyph from the local filesystem and show it on the display
 		self.GlyphToEeprom(filename, 0) 
 		im = Image.open(filename)
 		self.LoadGlyphFromEeprom(xpos, ypos, 0, im.size[0], im.size[1])
 
 	def GlyphToEeprom(self, filename, addr):
+		# the i2c function can transfer may 32 bytes, so we optimize for that
 		im = Image.open(filename)
+		bytesPerRow = int(math.ceil(float(im.size[0]) / 8))
 		pix = im.load()
+		data = []
 		for j in range(im.size[1]): # for all rows
-			bytesPerRow = int(math.ceil(float(im.size[0]) / 8))
 			curraddr = addr + j * bytesPerRow
-			data = [curraddr >> 8, curraddr & 0xFF, bytesPerRow] # address, num bytes
+			if len(data) == 0:
+				data = [curraddr >> 8, curraddr & 0xFF, bytesPerRow] # address, num bytes
+			else:
+				data[2] = data[2] + bytesPerRow
+
 			for i in range(bytesPerRow):
 				bb = 0
 				for k in range(8): # for every bit in the byte
@@ -122,9 +112,15 @@ class NokiaDisplay:
 							if pixel != 0:
 								bb |= 0x1 << k
 				data.append(bb)
-		#	print data
+			if len(data) + bytesPerRow > 30:
+#				print data
+				self.i2c.write_i2c_block_data(self.i2cSlaveAddr, 0xD1, data) # transfer data to eeprom
+				time.sleep(0.18) # give the micro processor some time to swallow the data
+				data = []
+		if len(data) > 0:
+#			print data
 			self.i2c.write_i2c_block_data(self.i2cSlaveAddr, 0xD1, data) # transfer data to eeprom
-			time.sleep(0.028) # give the micro processor some time to swallow the data
+			time.sleep(0.18) # give the micro processor some time to swallow the data
 
 
 	def LoadGlyphFromEeprom(self, xpos, ypos, addr, sizeX = 32, sizeY = 32):
@@ -133,12 +129,19 @@ class NokiaDisplay:
 		print data
 		time.sleep(0.02) # give the micro processor some time to swallow the data
 
-#	def AnimateGlyphsFromEeprom(self, xpos, ypos, addrs, delay, numloops, sizeX = 32, sizeY = 32):
-#		data = [xpos, ypos, delay, numloops, sizeX, sizeY, len(addrs)]
-#		for i in range(len(addrs)):
-#			data.append(addrs[i] >> 8)
-#			data.append(addrs[i] & 0xFF)
-#		self.i2c.write_i2c_block_data(self.i2cSlaveAddr, 0xD3, data)
+	def AnimateGlyphsFromEeprom(self, numloop, delay, positions, addrs, sizeX = 32, sizeY = 32):
+		if len(positions) != 2 * len(addrs):
+			raise RuntimeError('number of positions and addresses dont match')
+		numimg = len(addrs)
+		data = [numimg, numloop, delay, sizeX, sizeY]
+		for i in range(2 * numimg):
+			data.append(positions[i])
+		for i in range(numimg):
+			data.append(addrs[i] >> 8)
+			data.append(addrs[i] & 0xFF)
+		self.i2c.write_i2c_block_data(self.i2cSlaveAddr, 0xD3, data)
+#		print '0xD3', data
+		time.sleep(0.02) # give the micro processor some time to swallow the data
 
 	def __repr__(self):
 		print "atmega interfacing a nokia display at i2c address %d" % self.i2cSlaveAddr
@@ -149,38 +152,37 @@ class NokiaDisplay:
 if __name__ == "__main__":
 	disp = NokiaDisplay(0x19, 0) # bus is 0 on the alix, and 1 on the raspbe
 	disp.Backlight(True)
-	disp.LedBlue(130)
+#	disp.LedBlue(130)
 	disp.ClearDisplay()
 	disp.UpdateDisplay()
-	time.sleep(0.5)
+#	time.sleep(0.5)
 	disp.LedBlue(0)
-	disp.StartScreen()
+#	disp.StartScreen()
 	disp.UpdateDisplay()
-	time.sleep(1.0)
+#	time.sleep(1.0)
 	disp.ClearDisplay()
 	disp.UpdateDisplay()
 	disp.SetContrast(0x40)
 	time.sleep(0.1)
 	disp.LineOut(5, 5, 40, 20, 1)
 	disp.UpdateDisplay()
-	time.sleep(0.3)
+	time.sleep(0.1)
 	disp.TextOut(4, 1, "Hello World")
 	disp.UpdateDisplay()
-	time.sleep(0.02)
-	filename = 'glyph/beer32.png'
-	im = Image.open(filename)
-	print filename, "  ",  im.size
-	disp.LoadGlyph(50, 14, filename)
-	filename = 'glyph/Richard.Ulrich.png'
-	im = Image.open(filename)
-	print filename, "  ",  im.size
-	disp.LoadGlyph(5, 14, filename)
+	time.sleep(0.1)
+	disp.LoadGlyph(55, 14, 'glyph/beer32.png')
 	disp.GlyphToEeprom('glyph/Richard.Ulrich.png', 0)
+	positions = [20, 14, 24, 14, 28, 14, 32, 14, 36, 14, 40, 14]
+	addrs = [0, 0, 0, 0, 0, 0]
+	disp.AnimateGlyphsFromEeprom(1, 10, positions, addrs, 23, 32)
+	time.sleep(1.0)
 	disp.GlyphToEeprom('glyph/Andreas.Burch.png', 128)
 	disp.GlyphToEeprom('glyph/Gabriel.Bocek.png', 256)
 	disp.GlyphToEeprom('glyph/Reto.Conconi.png', 384)
-	addrs = [0, 128]
-#	disp.AnimateGlyphsFromEeprom(5, 14, addrs, 20, 3, 23, 32)
+	positions = [40, 14, 40, 14, 40, 14, 40, 14]
+	addrs = [128, 256, 384, 0]
+	disp.AnimateGlyphsFromEeprom(1, 50, positions, addrs, 23, 32)
+	time.sleep(2.0)
 	disp.Backlight(False)	
 
 
