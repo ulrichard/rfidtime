@@ -126,7 +126,7 @@ class NokiaDisplay:
 	def LoadGlyphFromEeprom(self, xpos, ypos, addr, sizeX = 32, sizeY = 32):
 		data = [xpos, ypos, addr >> 8, addr & 0xFF, sizeX, sizeY]
 		self.i2c.write_i2c_block_data(self.i2cSlaveAddr, 0xD2, data)
-		print data
+#		print data
 		time.sleep(0.02) # give the micro processor some time to swallow the data
 
 	def AnimateGlyphsFromEeprom(self, numloop, delay, positions, addrs, sizeX = 32, sizeY = 32):
