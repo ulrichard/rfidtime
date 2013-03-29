@@ -126,7 +126,7 @@ class NokiaDisplay:
 	def LoadGlyphFromEeprom(self, xpos, ypos, addr, sizeX = 32, sizeY = 32):
 		data = [xpos, ypos, addr >> 8, addr & 0xFF, sizeX, sizeY]
 		self.i2c.write_i2c_block_data(self.i2cSlaveAddr, 0xD2, data)
-		print data
+#		print data
 		time.sleep(0.02) # give the micro processor some time to swallow the data
 
 	def AnimateGlyphsFromEeprom(self, numloop, delay, positions, addrs, sizeX = 32, sizeY = 32):
@@ -171,14 +171,14 @@ if __name__ == "__main__":
 	disp.UpdateDisplay()
 	time.sleep(0.1)
 	disp.LoadGlyph(55, 14, 'glyph/beer32.png')
-	disp.GlyphToEeprom('glyph/Richard.Ulrich.png', 0)
+	disp.GlyphToEeprom('glyph/RICHARD.ULRICH.png', 0)
 	positions = [20, 14, 24, 14, 28, 14, 32, 14, 36, 14, 40, 14]
 	addrs = [0, 0, 0, 0, 0, 0]
 	disp.AnimateGlyphsFromEeprom(1, 10, positions, addrs, 23, 32)
 	time.sleep(1.0)
-	disp.GlyphToEeprom('glyph/Andreas.Burch.png', 128)
-	disp.GlyphToEeprom('glyph/Gabriel.Bocek.png', 256)
-	disp.GlyphToEeprom('glyph/Reto.Conconi.png', 384)
+	disp.GlyphToEeprom('glyph/ANDREAS.BURCH.png', 128)
+	disp.GlyphToEeprom('glyph/GABRIEL.BOCEK.png', 256)
+	disp.GlyphToEeprom('glyph/RETO.CONCONI.png', 384)
 	positions = [40, 14, 40, 14, 40, 14, 40, 14]
 	addrs = [128, 256, 384, 0]
 	disp.AnimateGlyphsFromEeprom(1, 50, positions, addrs, 23, 32)
