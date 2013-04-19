@@ -129,7 +129,7 @@ def open_or_close_time_record(dbconn, userid, configval):
 	  
 		now = time.localtime()
 		industrynow = now.tm_hour + (now.tm_min + (now.tm_sec / 60.0)) / 60.0
-		if row['DZ_EZ'] is None and date.today() == row['DZ_DATUM'].date():
+		if (row['DZ_EZ'] is None or row['DZ_EZ'] == 0) and date.today() == row['DZ_DATUM'].date():
 			# just close the current record
 			print "closing record " + str(row['DZ_DATEN_ID'])
 			cur.execute('UPDATE DZ_DATEN SET DZ_EZ=%f, DZ_IST=%f WHERE DZ_DATEN_ID=%d' % (industrynow, industrynow - row['DZ_BZ'], row['DZ_DATEN_ID']))
