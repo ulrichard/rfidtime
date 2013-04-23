@@ -40,8 +40,8 @@
 //      LED red    <-  5|    |24                   |  |   nokia 5110 LCD
 //      buzzer     <-  6|    |23 -> backlight --+  |  |  +--------------+
 //                VCC  7|    |22  GND ----------|--|--+--|        GND ->|
-//                GND  8|    |21                +--+-----|  backlight ->|
-//          resonator  9|    |20  VCC     ---------------|        VCC ->|
+//                GND  8|    |21                +--|-----|  backlight ->|
+//          resonator  9|    |20  VCC     ---------+-----|        VCC ->|
 //          resonator 10|    |19  -> SCK  ---------------|        SCK ->|
 //      LED green  <- 11|    |18  <- MISO    +-----------|       MOSI ->|
 //      LED blue   <- 12|    |17  -> MOSI ---+     +-----|   cmd/data ->|
@@ -59,7 +59,7 @@
 #include <Wire.h>
 #include <EEPROM.h>
 
-#define ENABLE_STARTSCREEN
+//#define ENABLE_STARTSCREEN
 //#define ENABLE_SERIAL_DBG
 //#define ENABLE_SERIAL_INP
 //#define ENABLE_BUZZER
