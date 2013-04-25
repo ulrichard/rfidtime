@@ -41,10 +41,10 @@ def main(config, opts):
 		disp.LedRed(0)
 		disp.LedGreen(0)
 		disp.LedBlue(0)
-		disp.GlyphToEeprom('glyph/factory32.png', 256)
-		disp.GlyphToEeprom('glyph/beer32.png', 384)
-		glyphAddr['glyph/factory32.png'] = 256
-		glyphAddr['glyph/beer32.png'] = 384
+		disp.GlyphToEeprom('glyph/factory32.png', 384)
+		disp.GlyphToEeprom('glyph/beer32.png', 512)
+		glyphAddr['glyph/factory32.png'] = 384
+		glyphAddr['glyph/beer32.png'] = 512
 
 	# connect to the database
 	print "connecting to the database"
