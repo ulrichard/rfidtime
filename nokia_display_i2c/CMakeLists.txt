@@ -1,5 +1,7 @@
 # our BCP has an 8MHz resonator
-SET(atmega8.build.f_cpu 8000000)
+#SET(atmega8.build.f_cpu 8000000)
+# our BCP has a 12MHz crystal
+SET(atmega8.build.f_cpu 12000000)
 
 set(CMAKE_TOOLCHAIN_FILE ../../arduino-cmake/cmake/ArduinoToolchain.cmake)
 
