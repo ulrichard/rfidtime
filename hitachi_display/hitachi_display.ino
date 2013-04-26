@@ -10,8 +10,8 @@
  and shows the time.
  
   The circuit:
- * LCD RS pin to digital pin 12
- * LCD Enable pin to digital pin 11
+ * LCD RS pin to digital pin 8 
+ * LCD Enable pin to digital pin 7
  * LCD D4 pin to digital pin 5
  * LCD D5 pin to digital pin 4
  * LCD D6 pin to digital pin 3
@@ -39,7 +39,7 @@
 #include <LiquidCrystal.h>
 
 // initialize the library with the numbers of the interface pins
-LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+LiquidCrystal lcd(8, 7, 5, 4, 3, 2);
 
 void setup() {
   // set up the LCD's number of columns and rows: 
