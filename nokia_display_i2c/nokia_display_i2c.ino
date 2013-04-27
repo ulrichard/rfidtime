@@ -103,7 +103,7 @@ void setup()
     Wire.onReceive(receiveI2C); // register event
    
     SPI.begin();
-    SPI.setClockDivider(SPI_CLOCK_DIV32); // 500 kHz
+    SPI.setClockDivider(SPI_CLOCK_DIV64); // 250 kHz
 
     disp.init();
     disp.LcdContrast(0x40);
