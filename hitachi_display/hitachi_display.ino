@@ -103,8 +103,8 @@ void HandleI2cCommands()
         case 0xB2: // print
             if(recvPos < 2 || recvPos < 2 + recvBuffer[1])
                 return;
-            recvBuffer[min(1 + recvBuffer[1], sizeof(recvBuffer) - 1)] = '\0';    
-            lcd.print(reinterpret_cast<char*>(recvBuffer + 1));
+            recvBuffer[min(2 + recvBuffer[1], sizeof(recvBuffer) - 1)] = '\0';    
+            lcd.print(reinterpret_cast<char*>(recvBuffer + 2));
             break;
         case 0xB3: // createChar
             // not yet implemented

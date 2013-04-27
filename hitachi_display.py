@@ -34,7 +34,7 @@ class HitachiDisplay:
 
 # test code
 if __name__ == "__main__":
-	disp = HitachiDisplay(0x21, 0) # bus is 0 on the alix, and 1 on the raspberrypi
+	disp = HitachiDisplay(0x21, 1) # bus is 0 on the alix, and 1 on the raspberrypi
 	disp.ClearDisplay()
 	disp.SetCursor(5, 1)
 	disp.Print("welcome")
