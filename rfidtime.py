@@ -137,6 +137,9 @@ def open_or_close_time_record(dbconn, userid, configval):
 			notification(row['CURRENTUSER'], 'geht', 'green', configval)
 
 		else:
+			if row['AUF_ID'] is None:
+				notification('Auftrag is missing', 'in the last record', 'red', configval)
+
 			# create a new record with mostly the same settings as the last one
 			print "The last record is closed. Creating a new record."
 			cur.execute('INSERT INTO DZ_DATEN '
