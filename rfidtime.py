@@ -170,8 +170,10 @@ def notification(who, what, color, configval):
 		elif(color == 'red'):
 			disp.LedRed(130)
 		if(color == 'blue'):
+			disp.GlyphToEeprom('glyph/factory32.png', 384)
 			disp.LoadGlyphFromEeprom(55, 8, glyphAddr['glyph/factory32.png'], 32, 32)
 		elif(color == 'green'):
+                	disp.GlyphToEeprom('glyph/beer32.png', 512)
 			disp.LoadGlyphFromEeprom(55, 8, glyphAddr['glyph/beer32.png'], 32, 32)
 		time.sleep(0.2)
 		disp.LedRed(0)
@@ -187,8 +189,8 @@ def notification(who, what, color, configval):
 				for k, v in glyphAddr.iteritems():
 					if v >= addr:
 						addr = v + 128
-				disp.GlyphToEeprom(portrait, addr)
 				glyphAddr[portrait] = addr
+			disp.GlyphToEeprom(portrait, addr)
 			positions = [20, 8, 24, 8, 28, 8, 32, 8, 36, 8, 40, 8]
 			addrs = [addr, addr, addr, addr, addr, addr]
 			disp.AnimateGlyphsFromEeprom(1, 10, positions, addrs, 23, 32)
