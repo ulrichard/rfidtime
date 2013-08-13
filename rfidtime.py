@@ -13,6 +13,7 @@ from configobj import ConfigObj
 import os
 import smbus
 from nokia_display import NokiaDisplay
+from bamboo import BambooState
 
 #with daemon.DaemonContext():
 #    do_main_program()
@@ -82,12 +83,15 @@ def main(config, opts):
 			if ser.inWaiting() == 0:
 				time.sleep(0.05)
 				tmptimestr = time.strftime('%x %X')[0:14]
+				# update the time string once a second
 				if timestr != tmptimestr:
 					timestr = tmptimestr
 					disp.TextOut(1, 6, timestr)
 					disp.UpdateDisplay()
 
-					# ToDo: check the bamboo status here
+					# check the buld status on bamboo once a minute
+					if timestr[0:12] != tmptimestr[0:12]:
+						check_bamboo_state(configval)
 				continue
 			serin = ser.read(1)
 			rfidtag += "%02X" % ord(serin)
@@ -237,6 +241,20 @@ def notification(who, what, color, configval):
 		i2c.write_byte(0x09, 0x00)
 		i2c.write_byte(0x09, 0x00)
 
+def check_bamboo_state(configval):
+	print 'checking the bamboo build status'
+#	bamb = BambooState('dev.cubx-software.com:8446', 'ulr', passwd)
+	bamb = BambooState(configval.get('BambooURL'), configval.get('BambooUser'), configval.get('BambooPassword'))
+	disp = NokiaDisplay(0x19, configval.get('NokiaDisplayBus'))
+	disp.LedRed(0)
+	disp.LedGreen(0)
+	disp.LedBlue(0)
+	if not bamb.latestBuildSuccessful('PLB-CIMAINDEV'):
+		disp.LedRed(130)
+		disp.TextOut(1, 6, 'PLB-CIMAINDEV error')
+		print 'PLB-CIMAINDEV error'
+
+
 if __name__ == '__main__':
     from configglue import schema
     from configglue.glue import configglue
@@ -281,6 +299,15 @@ if __name__ == '__main__':
 		NokiaDisplayBus = schema.IntOption(
 			default=0,
 			help='The i2c bus that the nokia display is connected. 0 on the alix or 1 on the raspberry pi.')
+		BambooURL = schema.StringOption(
+			default='dev.cubx-software.com:8446',
+			help='The URL where bamboo can be reached')
+		BambooUser = schema.StringOption(
+			default='ulr',
+			help='The bamboo or jira user name')
+		BambooPassword = schema.StringOption(
+			default='mydirtylittlesecret',
+			help='The password for the bamboo or jira login')
 
 
     # glue everything together
