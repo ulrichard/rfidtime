@@ -6,6 +6,7 @@
 
 
 import httplib2, getpass
+from xml.dom.minidom import parseString
 
 class BambooState:
 	def __init__(self, url, user, password):
@@ -22,8 +23,13 @@ class BambooState:
 		url = "https://%s/rest/api/latest/result/PLB-CIMAINDEV?max-result=5&os_authType=basic" % self.baseurl
 #		resp, content = h.request(url, "GET", headers={'content-type':'text/json'} )
 		resp, content = h.request(url, "GET")
-		print content	
-		return True
+#		print content	
+
+		dom = parseString(content)
+		result = dom.getElementsByTagName('result')[0].toxml()
+#		print result
+
+		return result.find('state="Successful"') > 0
 
 
 	
