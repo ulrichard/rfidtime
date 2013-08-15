@@ -79,6 +79,7 @@ def main(config, opts):
 	while 1:
 		rfidtag = ''
 		timestr = ''
+		bambooCountdown = 1
 		while len(rfidtag) < 10:
 			if ser.inWaiting() == 0:
 				time.sleep(0.05)
@@ -90,8 +91,10 @@ def main(config, opts):
 					disp.UpdateDisplay()
 
 					# check the buld status on bamboo once a minute
-					if timestr[0:12] != tmptimestr[0:12]:
+					bambooCountdown = bambooCountdown - 1
+					if bambooCountdown <= 0:
 						check_bamboo_state(configval)
+						bambooCountdown = 60
 				continue
 			serin = ser.read(1)
 			rfidtag += "%02X" % ord(serin)
@@ -242,8 +245,7 @@ def notification(who, what, color, configval):
 		i2c.write_byte(0x09, 0x00)
 
 def check_bamboo_state(configval):
-	print 'checking the bamboo build status'
-#	bamb = BambooState('dev.cubx-software.com:8446', 'ulr', passwd)
+#	print 'checking the bamboo build status on ', configval.get('BambooURL'), '  as  ', configval.get('BambooUser')
 	bamb = BambooState(configval.get('BambooURL'), configval.get('BambooUser'), configval.get('BambooPassword'))
 	disp = NokiaDisplay(0x19, configval.get('NokiaDisplayBus'))
 	disp.LedRed(0)
@@ -251,8 +253,8 @@ def check_bamboo_state(configval):
 	disp.LedBlue(0)
 	if not bamb.latestBuildSuccessful('PLB-CIMAINDEV'):
 		disp.LedRed(130)
-		disp.TextOut(1, 6, 'PLB-CIMAINDEV error')
-		print 'PLB-CIMAINDEV error'
+		disp.TextOut(1, 5, 'PLB-CIMAINDEV error')
+		print ' bamboo PLB-CIMAINDEV error'
 
 
 if __name__ == '__main__':
