@@ -252,7 +252,7 @@ def check_bamboo_state(configval):
 	disp.LedGreen(0)
 	disp.LedBlue(0)
 	if not bamb.latestBuildSuccessful('PLB-CIMAINDEV'):
-		disp.LedRed(90)
+		disp.LedRed(120)
 		disp.Backlight(True)
 		disp.TextOut(1, 5, 'PLB-CIMAINDEV error')
 		disp.UpdateDisplay()
