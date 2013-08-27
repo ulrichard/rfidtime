@@ -251,6 +251,7 @@ def check_bamboo_state(configval):
 	disp.LedRed(0)
 	disp.LedGreen(0)
 	disp.LedBlue(0)
+	disp.Backlight(False)
 	if not bamb.latestBuildSuccessful('PLB-CIMAINDEV'):
 		disp.LedRed(130)
 		disp.Backlight(True)
