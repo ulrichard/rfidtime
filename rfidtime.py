@@ -165,6 +165,9 @@ def notification(who, what, color, configval):
 	if configval.get('useNokiaDisplay'):
 		disp = NokiaDisplay(0x19, configval.get('NokiaDisplayBus'))
 		disp.Backlight(True)
+		disp.LedRed(0)
+		disp.LedGreen(0)
+		disp.LedBlue(0)
 		disp.ClearDisplay()
 		disp.TextOut(1, 1, who)
 		disp.TextOut(1, 2, what)
@@ -255,7 +258,9 @@ def check_bamboo_state(configval):
 	if not bamb.latestBuildSuccessful('PLB-CIMAINDEV'):
 		disp.LedRed(130)
 		disp.Backlight(True)
-		disp.TextOut(1, 5, 'PLB-CIMAINDEV error')
+		disp.TextOut(1, 3, 'bamboo ')
+		disp.TextOut(1, 4, 'build break ')
+		disp.TextOut(1, 5, 'PLB-CIMAINDEV')
 		disp.UpdateDisplay()
 		print ' bamboo PLB-CIMAINDEV error'
 
