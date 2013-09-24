@@ -44,8 +44,10 @@ def main(config, opts):
 		disp.LedBlue(0)
 		disp.GlyphToEeprom('glyph/factory32.png', 384)
 		disp.GlyphToEeprom('glyph/beer32.png', 512)
+		disp.GlyphToEeprom('glyph/bomb32.png', 640)
 		glyphAddr['glyph/factory32.png'] = 384
 		glyphAddr['glyph/beer32.png'] = 512
+		glyphAddr['glyph/bomb32.png'] = 640
 
 	# connect to the database
 	print "connecting to the database"
@@ -185,6 +187,9 @@ def notification(who, what, color, configval):
 		elif(color == 'green'):
                 	disp.GlyphToEeprom('glyph/beer32.png', 512)
 			disp.LoadGlyphFromEeprom(55, 8, glyphAddr['glyph/beer32.png'], 32, 32)
+		elif(color == 'red'):
+                	disp.GlyphToEeprom('glyph/bomb32.png', 640)
+			disp.LoadGlyphFromEeprom(55, 1, glyphAddr['glyph/bomb32.png'], 32, 32)
 		time.sleep(0.2)
 		disp.LedRed(0)
 		disp.LedGreen(0)
@@ -257,10 +262,13 @@ def check_bamboo_state(configval):
 	disp.Backlight(False)
 	if not bamb.latestBuildSuccessful('PLB-CIMAINDEV'):
 		disp.LedRed(130)
+		disp.ClearDisplay()
+		disp.GlyphToEeprom('glyph/bomb32.png', 640)
+		disp.LoadGlyphFromEeprom(55, 1, glyphAddr['glyph/bomb32.png'], 32, 32)
 		disp.Backlight(True)
-		disp.TextOut(1, 3, 'bamboo ')
-		disp.TextOut(1, 4, 'build break ')
-		disp.TextOut(1, 5, 'PLB-CIMAINDEV')
+		disp.TextOut(1, 1, 'bamboo')
+		disp.TextOut(1, 2, 'build break')
+		disp.TextOut(1, 3, 'PLB-CIMAINDEV')
 		disp.UpdateDisplay()
 		print ' bamboo PLB-CIMAINDEV error'
 
