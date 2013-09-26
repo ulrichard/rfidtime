@@ -183,13 +183,13 @@ def notification(who, what, color, configval):
 			disp.LedRed(130)
 		if(color == 'blue'):
 			disp.GlyphToEeprom('glyph/factory32.png', 384)
-			disp.LoadGlyphFromEeprom(55, 8, glyphAddr['glyph/factory32.png'], 32, 32)
+			disp.LoadGlyphFromEeprom(54, 8, glyphAddr['glyph/factory32.png'], 32, 32)
 		elif(color == 'green'):
                 	disp.GlyphToEeprom('glyph/beer32.png', 512)
-			disp.LoadGlyphFromEeprom(55, 8, glyphAddr['glyph/beer32.png'], 32, 32)
+			disp.LoadGlyphFromEeprom(54, 8, glyphAddr['glyph/beer32.png'], 32, 32)
 		elif(color == 'red'):
                 	disp.GlyphToEeprom('glyph/bomb32.png', 640)
-			disp.LoadGlyphFromEeprom(55, 1, glyphAddr['glyph/bomb32.png'], 32, 32)
+			disp.LoadGlyphFromEeprom(54, 1, glyphAddr['glyph/bomb32.png'], 32, 32)
 		time.sleep(0.2)
 		disp.LedRed(0)
 		disp.LedGreen(0)
@@ -263,12 +263,13 @@ def check_bamboo_state(configval):
 	if not bamb.latestBuildSuccessful('PLB-CIMAINDEV'):
 		disp.LedRed(130)
 		disp.ClearDisplay()
-		disp.GlyphToEeprom('glyph/bomb32.png', 640)
-		disp.LoadGlyphFromEeprom(55, 1, glyphAddr['glyph/bomb32.png'], 32, 32)
+		disp.GlyphToEeprom('glyph/bomb32.png', glyphAddr['glyph/bomb32.png'])
+		disp.LoadGlyphFromEeprom(54, 1, glyphAddr['glyph/bomb32.png'], 32, 32)
 		disp.Backlight(True)
-		disp.TextOut(1, 1, 'bamboo')
 		disp.TextOut(1, 2, 'build break')
-		disp.TextOut(1, 3, 'PLB-CIMAINDEV')
+		disp.TextOut(1, 3, 'bamboo')
+		disp.TextOut(1, 5, 'PLB-CIMAINDEV')
+		disp.TextOut(1, 6, time.strftime('%x %X')[0:14])
 		disp.UpdateDisplay()
 		print ' bamboo PLB-CIMAINDEV error'
 

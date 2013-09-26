@@ -58,7 +58,7 @@ class NokiaDisplay:
 			self.i2c.write_byte(self.i2cSlaveAddr, 0xC1)
 		else:
 			self.i2c.write_byte(self.i2cSlaveAddr, 0xC2)
-		time.sleep(0.02)
+		time.sleep(0.03)
 
 	def LedRed(self, val): # set the brightness of the red LED -> 0-255
 		self.i2c.write_byte(self.i2cSlaveAddr, 0xC3)
