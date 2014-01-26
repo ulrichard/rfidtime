@@ -1,0 +1,3 @@
+[submodule "rfid532lib"]
+	path = rfid532lib
+	url = git@github.com:ulrichard/py532lib.git
