@@ -18,9 +18,7 @@ from rfid532lib.py532lib.constants import *
 
 class NfcShield:
 	def __init__(self, i2cSlaveAddr = 0x24, i2cBusNbr = 0):
-#		self.i2cSlaveAddr = i2cSlaveAddr
-#		self.i2c = smbus.SMBus(i2cBusNbr)
-		self.pn532 = Pn532_i2c()
+		self.pn532 = Pn532_i2c(i2cSlaveAddr, i2cBusNbr)
 		self.pn532.SAMconfigure()
 
 #	def GetFirmwareVersion(self): # Checks the firmware version of the PN5xx chip
@@ -38,7 +36,7 @@ class NfcShield:
 
 # test code
 if __name__ == '__main__':
-	nfc = NfcShield(0x24, 1) # bus is 0 on the alix, and 1 on the raspberryPi
+	nfc = NfcShield(0x24, 0) # bus is 0 on the alix, and 1 on the raspberryPi
 #	print nfc.GetFirmwareVersion()
 
 	print(nfc.GetCardData())
