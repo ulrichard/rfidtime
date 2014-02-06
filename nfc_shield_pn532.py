@@ -1,5 +1,5 @@
-#! /usr/bin/python3
-# script to communicate with the nfc shie 
+#! /usr/bin/python2
+# script to communicate with the nfc shield
 # http://www.elecfreaks.com/store/rfidnfc-breakout-board-p-519.html
 # https://www.adafruit.com/products/364
 # http://nfc-tools.org/index.php?title=Libnfc#Debian_.2F_Ubuntu
