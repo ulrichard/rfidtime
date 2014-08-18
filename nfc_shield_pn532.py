@@ -1,4 +1,4 @@
-#! /usr/bin/python2
+#! /usr/bin/python3
 # script to communicate with the nfc shield
 # http://www.elecfreaks.com/store/rfidnfc-breakout-board-p-519.html
 # https://www.adafruit.com/products/364
@@ -14,6 +14,7 @@ sys.path.append(lib_path + '/rfid532lib')
 from rfid532lib.py532lib.i2c import *
 from rfid532lib.py532lib.frame import *
 from rfid532lib.py532lib.constants import *
+from hitachi_display_py3 import HitachiDisplay
 
 
 class NfcShield:
@@ -39,8 +40,21 @@ class NfcShield:
 
 # test code
 if __name__ == '__main__':
-	nfc = NfcShield(0x24, 1) # bus is 0 on the alix, and 1 on the raspberryPi
-#	print nfc.GetFirmwareVersion()
+    i2cBus = 1 # bus is 0 on the alix, and 1 on the raspberryPi
+    nfc = NfcShield(0x24, 1)
+#   print(nfc.GetFirmwareVersion())
+    disp = HitachiDisplay(0x21, 1)
 
-	print(nfc.GetCardData(1))
+    for i in range(20):
+        tag = str(nfc.GetCardData(1))
+
+        print(tag)
+
+        disp.ClearDisplay()
+        disp.SetCursor(0, 0)
+        disp.Print(tag[12:20])
+        disp.SetCursor(0, 1)
+        disp.Print(tag[20:28])
+
+
 
