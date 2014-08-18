@@ -44,17 +44,24 @@ if __name__ == '__main__':
     nfc = NfcShield(0x24, 1)
 #   print(nfc.GetFirmwareVersion())
     disp = HitachiDisplay(0x21, 1)
+    lastTag = ''
 
-    for i in range(20):
-        tag = str(nfc.GetCardData(1))
-
+    while True:
+        tag = nfc.GetCardData(1)
         print(tag)
 
-        disp.ClearDisplay()
-        disp.SetCursor(0, 0)
-        disp.Print(tag[12:20])
-        disp.SetCursor(0, 1)
-        disp.Print(tag[20:28])
+        if lastTag != tag:
+            lastTag = tag
+            tag = str(tag)
+            if 'bytearray' == tag[:9]:
+                tag = tag[12:len(tag)-2]
+                tag = tag.replace("\\", "")
 
+            disp.ClearDisplay()
+            disp.SetCursor(0, 0)
+            disp.Print(tag[:16])
+            disp.SetCursor(0, 1)
+            disp.Print(tag[16:32])
 
+        time.sleep(0.2)
 
