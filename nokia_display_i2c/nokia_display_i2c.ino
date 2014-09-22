@@ -56,7 +56,7 @@
 //#define ENABLE_SERIAL_INP
 //#define ENABLE_BUZZER
 #define ENABLE_ANIMATION
-#define ENABLE_NFC
+//#define ENABLE_NFC
 
 #include "nokia3310lcd.h"
 #ifdef ENABLE_SERIAL_DBG
@@ -332,6 +332,7 @@ void HandleI2cCommands()
 			break;
 		}
 #endif
+#ifdef ENABLE_NFC
         case 0xF0: // read nfc tag
         {
             boolean success;
@@ -357,6 +358,7 @@ void HandleI2cCommands()
 
             break;
         }
+#endif
         default:
             // invalid command. just reset below          
             digitalWrite(LED_RED, LOW);
