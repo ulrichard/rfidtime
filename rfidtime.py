@@ -260,7 +260,7 @@ def check_bamboo_state(configval):
 	disp.LedGreen(0)
 	disp.LedBlue(0)
 	disp.Backlight(False)
-	if not bamb.latestBuildSuccessful('PLB-CIMAINDEV'):
+	if not bamb.latestBuildSuccessful('PLB-PLBCIMAINDEVVC12'):
 		disp.LedRed(130)
 		disp.ClearDisplay()
 		disp.GlyphToEeprom('glyph/bomb32.png', glyphAddr['glyph/bomb32.png'])
@@ -268,10 +268,10 @@ def check_bamboo_state(configval):
 		disp.Backlight(True)
 		disp.TextOut(1, 2, 'build break')
 		disp.TextOut(1, 3, 'bamboo')
-		disp.TextOut(1, 5, 'PLB-CIMAINDEV')
+		disp.TextOut(1, 5, 'PLB-PLBCIMAINDEVVC12')
 		disp.TextOut(1, 6, time.strftime('%x %X')[0:14])
 		disp.UpdateDisplay()
-		print ' bamboo PLB-CIMAINDEV error'
+		print ' bamboo PLB-PLBCIMAINDEVVC12 error'
 
 
 if __name__ == '__main__':
