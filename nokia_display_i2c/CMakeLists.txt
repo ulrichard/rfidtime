@@ -15,7 +15,7 @@ SET(AVRDUDE_PORT   /dev/ttyACM0)
 
 generate_arduino_firmware(nokia_display
     SKETCH ../nokia_display_i2c
-    SRCS nokia_display_i2c.ino nokia3310lcd.cpp
+    SRCS nokia_display_i2c.ino nokia3310lcd.cpp nfc/Adafruit_NFCShield_I2C.cpp
 	PROGRAMMER stk500v2
     PORT  ${AVRDUDE_PORT}
     BOARD ${AVR_DEVICE}

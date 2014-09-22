@@ -10,7 +10,7 @@
 // This program will serve as an interface between a nokia display and the i2c bus 
 // Created by Richard Ulrich <richi@paraeasy.ch>
 
-// ATMEL ATMEGA168
+// ATMEL ATMEGA8
 //                              +-\/-+
 // PCINT14/!RESET     PC6 RST  1|    |28  A5  PC5  ADC5/SCL/PCINT13
 // PCINT16/RXD        PD0 D0   2|    |27  A4  PC4  ADC4/SDA/PCINT12
@@ -34,14 +34,14 @@
 //
 //                      +-\/-+
 //              RST -> 1|    |28 <-  SCL  -------------- C  I
-//         uart RXD -> 2|    |27 <-> SDA  -------------- D  2
-//         uart TXD <- 3|    |26                   +---- V  C
-//                     4|    |25                   |  +- G                    
-//      LED red    <-  5|    |24                   |  |   nokia 5110 LCD
-//      buzzer     <-  6|    |23 -> backlight --+  |  |  +--------------+
-//                VCC  7|    |22  GND ----------|--|--+--|        GND ->|
+//         uart RXD -> 2| A  |27 <-> SDA  -------------- D  2
+//         uart TXD <- 3| T  |26                   +---- V  C
+//                     4| M  |25                   |  +- G                    
+//      LED red    <-  5| E  |24                   |  |   nokia 5110 LCD
+//      buzzer     <-  6| G  |23 -> backlight --+  |  |  +--------------+
+//                VCC  7| A  |22  GND ----------|--|--+--|        GND ->|
 //                GND  8|    |21                +--|-----|  backlight ->|
-//          resonator  9|    |20  VCC     ---------+-----|        VCC ->|
+//          resonator  9| 8  |20  VCC     ---------+-----|        VCC ->|
 //          resonator 10|    |19  -> SCK  ---------------|        SCK ->|
 //      LED green  <- 11|    |18  <- MISO    +-----------|       MOSI ->|
 //      LED blue   <- 12|    |17  -> MOSI ---+     +-----|   cmd/data ->|
@@ -51,27 +51,41 @@
 //           +---|-----------------------------------+ |
 //               +-------------------------------------+   
 
+//#define ENABLE_STARTSCREEN
+//#define ENABLE_SERIAL_DBG
+//#define ENABLE_SERIAL_INP
+//#define ENABLE_BUZZER
+#define ENABLE_ANIMATION
+#define ENABLE_NFC
+
 #include "nokia3310lcd.h"
-#include "Streaming.h"
+#ifdef ENABLE_SERIAL_DBG
+ #include "Streaming.h"
+#endif
+#ifdef ENABLE_NFC
+ #include "nfc/Adafruit_NFCShield_I2C.h"
+#endif
 // arduino
 #include <Arduino.h>
 #include <SPI.h>
 #include <Wire.h>
 #include <EEPROM.h>
 
-//#define ENABLE_STARTSCREEN
-//#define ENABLE_SERIAL_DBG
-//#define ENABLE_SERIAL_INP
-//#define ENABLE_BUZZER
-#define ENABLE_ANIMATION
-
 Nokia3310LCD  disp(9, 8, 7);
 const uint8_t LCD_BACKLIGHT = A0;
 const uint8_t LED_RED   = 5;
 const uint8_t LED_GREEN = 6;
 const uint8_t LED_BLUE  = 3;
+
 #ifdef ENABLE_BUZZER
 const uint8_t PIEZO_BUZZER = 4;
+#endif
+
+#ifdef ENABLE_NFC
+#define NFC_IRQ   (2)
+#define NFC_RESET (3)  // Not connected by default on the NFC Shield
+Adafruit_NFCShield_I2C nfc(NFC_IRQ, NFC_RESET);
+void toHex(char* buf, const uint8_t uid);
 #endif
 
 uint8_t recvBuffer[40];
@@ -93,6 +107,18 @@ void setup()
     digitalWrite(LED_BLUE,  HIGH);
 #ifdef ENABLE_BUZZER
     pinMode(PIEZO_BUZZER, OUTPUT);
+#endif
+
+#ifdef ENABLE_NFC
+    nfc.begin();
+
+    // Set the max number of retry attempts to read from a card
+    // This prevents us from waiting forever for a card, which is
+    // the default behaviour of the PN532.
+    nfc.setPassiveActivationRetries(0xFF);
+
+    // configure board to read RFID tags
+    nfc.SAMConfig();
 #endif
 
 #ifdef ENABLE_SERIAL_INP
@@ -306,6 +332,31 @@ void HandleI2cCommands()
 			break;
 		}
 #endif
+        case 0xF0: // read nfc tag
+        {
+            boolean success;
+            uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };  // Buffer to store the returned UID
+            uint8_t uidLength;                        // Length of the UID (4 or 7 bytes depending on ISO14443A card type)
+
+            // Wait for an ISO14443A type cards (Mifare, etc.).  When one is found
+            // 'uid' will be populated with the UID, and uidLength will indicate
+            // if the uid is 4 bytes (Mifare Classic) or 7 bytes (Mifare Ultralight)
+            success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, &uid[0], &uidLength);
+            if(success)
+            {
+                char buf[3];
+                disp.LcdGotoXYFont(0, 0);
+
+                for(uint8_t i=0; i<uidLength; i++) 
+                {
+                    toHex(buf, uid[i]);
+                    disp.LcdStr(Nokia3310LCD::FONT_1X, buf);
+                }
+
+            }
+
+            break;
+        }
         default:
             // invalid command. just reset below          
             digitalWrite(LED_RED, LOW);
@@ -317,6 +368,16 @@ void HandleI2cCommands()
     // so we can reset the receive buffer
     recvPos = 0;
 }
+
+#ifdef ENABLE_NFC
+void toHex(char* buf, const uint8_t uid)
+{
+    uint8_t tmp = uid >> 4;
+    buf[0] = (tmp > 9 ? 'A' : '0') + tmp;
+    tmp = uid & 0x0F;
+    buf[1] = (tmp > 9 ? 'A' : '0') + tmp;
+}
+#endif
 
 void receiveI2C(int howMany)
 {

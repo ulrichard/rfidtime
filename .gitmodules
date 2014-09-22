@@ -1,3 +1,6 @@
 [submodule "rfid532lib"]
 	path = rfid532lib
 	url = git@github.com:ulrichard/py532lib.git
+[submodule "nokia_display_i2c/nfc"]
+	path = nokia_display_i2c/nfc
+	url = https://github.com/adafruit/Adafruit_NFCShield_I2C.git
