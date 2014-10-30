@@ -56,14 +56,14 @@
 //#define ENABLE_SERIAL_INP
 //#define ENABLE_BUZZER
 #define ENABLE_ANIMATION
-//#define ENABLE_NFC
+#define ENABLE_NFC
 
-#include "nokia3310lcd.h"
+#include "../nokia_display_i2c/nokia3310lcd.h"
 #ifdef ENABLE_SERIAL_DBG
  #include "Streaming.h"
 #endif
 #ifdef ENABLE_NFC
- #include "nfc/Adafruit_NFCShield_I2C.h"
+ #include "PN532_SPI/PN532.h"
 #endif
 // arduino
 #include <Arduino.h>
