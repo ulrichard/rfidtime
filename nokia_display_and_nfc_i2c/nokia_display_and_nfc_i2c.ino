@@ -84,7 +84,7 @@ const uint8_t PIEZO_BUZZER = 4;
 #ifdef ENABLE_NFC
 #define NFC_IRQ   (2)
 #define NFC_RESET (3)  // Not connected by default on the NFC Shield
-Adafruit_NFCShield_I2C nfc(NFC_IRQ, NFC_RESET);
+PN532 nfc(13, 12, 11, 10);
 void toHex(char* buf, const uint8_t uid);
 #endif
 
@@ -115,7 +115,7 @@ void setup()
     // Set the max number of retry attempts to read from a card
     // This prevents us from waiting forever for a card, which is
     // the default behaviour of the PN532.
-    nfc.setPassiveActivationRetries(0xFF);
+//    nfc.setPassiveActivationRetries(0xFF);
 
     // configure board to read RFID tags
     nfc.SAMConfig();
@@ -335,25 +335,14 @@ void HandleI2cCommands()
 #ifdef ENABLE_NFC
         case 0xF0: // read nfc tag
         {
-            boolean success;
-            uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };  // Buffer to store the returned UID
-            uint8_t uidLength;                        // Length of the UID (4 or 7 bytes depending on ISO14443A card type)
-
-            // Wait for an ISO14443A type cards (Mifare, etc.).  When one is found
-            // 'uid' will be populated with the UID, and uidLength will indicate
-            // if the uid is 4 bytes (Mifare Classic) or 7 bytes (Mifare Ultralight)
-            success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, &uid[0], &uidLength);
-            if(success)
+            const uint8_t id = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A);
+            if(0 != id)
             {
                 char buf[3];
                 disp.LcdGotoXYFont(0, 0);
 
-                for(uint8_t i=0; i<uidLength; i++) 
-                {
-                    toHex(buf, uid[i]);
-                    disp.LcdStr(Nokia3310LCD::FONT_1X, buf);
-                }
-
+                toHex(buf, id);
+                disp.LcdStr(Nokia3310LCD::FONT_1X, buf);
             }
 
             break;
