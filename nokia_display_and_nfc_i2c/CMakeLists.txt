@@ -1,7 +1,5 @@
-# our BCP has an 8MHz resonator
-#SET(atmega8.build.f_cpu 8000000)
-# our BCP has a 12MHz crystal
-SET(atmega8.build.f_cpu 12000000)
+# our BCP has a 20MHz crystal
+SET(atmega328.build.f_cpu 20000000)
 
 set(CMAKE_TOOLCHAIN_FILE ../../arduino-cmake/cmake/ArduinoToolchain.cmake)
 
@@ -10,7 +8,7 @@ PROJECT(nokia_display_i2c)
 
 #print_board_list()
 
-SET(AVR_DEVICE     atmega8)
+SET(AVR_DEVICE     atmega328)
 SET(AVRDUDE_PORT   /dev/ttyACM0)
 
 generate_arduino_firmware(nokia_display_nfc

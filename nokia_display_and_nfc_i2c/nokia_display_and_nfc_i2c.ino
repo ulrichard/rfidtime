@@ -10,7 +10,7 @@
 // This program will serve as an interface between a nokia display and the i2c bus 
 // Created by Richard Ulrich <richi@paraeasy.ch>
 
-// ATMEL ATMEGA8
+// ATMEL ATMEGA328
 //                              +-\/-+
 // PCINT14/!RESET     PC6 RST  1|    |28  A5  PC5  ADC5/SCL/PCINT13
 // PCINT16/RXD        PD0 D0   2|    |27  A4  PC4  ADC4/SDA/PCINT12
@@ -41,9 +41,9 @@
 //      buzzer     <-  6| G  |23 -> backlight --+  |  |  +--------------+
 //                VCC  7| A  |22  GND ----------|--|--+--|        GND ->|
 //                GND  8|    |21                +--|-----|  backlight ->|
-//          resonator  9| 8  |20  VCC     ---------+-----|        VCC ->|
-//          resonator 10|    |19  -> SCK  ---------------|        SCK ->|
-//      LED green  <- 11|    |18  <- MISO    +-----------|       MOSI ->|
+//          resonator  9| 3  |20  VCC     ---------+-----|        VCC ->|
+//          resonator 10| 2  |19  -> SCK  ---------------|        SCK ->|
+//      LED green  <- 11| 8  |18  <- MISO    +-----------|       MOSI ->|
 //      LED blue   <- 12|    |17  -> MOSI ---+     +-----|   cmd/data ->|
 // LCD chip select <- 13|    |16  <- SS            | +---|chip enable ->|
 // LCD reset |   +-<- 14|    |15  -> LCD cmd/data -+ | +-|      reset ->|
@@ -51,19 +51,22 @@
 //           +---|-----------------------------------+ |
 //               +-------------------------------------+   
 
-//#define ENABLE_STARTSCREEN
-//#define ENABLE_SERIAL_DBG
+#define ENABLE_NOKIA_DISPLAY
+#define ENABLE_STARTSCREEN
+#define ENABLE_SERIAL_DBG
 //#define ENABLE_SERIAL_INP
 //#define ENABLE_BUZZER
 #define ENABLE_ANIMATION
 #define ENABLE_NFC
 
-#include "../nokia_display_i2c/nokia3310lcd.h"
+#ifdef ENABLE_NOKIA_DISPLAY
+ #include "nokia3310lcd.h"
+#endif
 #ifdef ENABLE_SERIAL_DBG
  #include "Streaming.h"
 #endif
 #ifdef ENABLE_NFC
- #include "PN532_SPI/PN532.h"
+ #include "PN532.h"
 #endif
 // arduino
 #include <Arduino.h>
@@ -71,8 +74,10 @@
 #include <Wire.h>
 #include <EEPROM.h>
 
+#ifdef ENABLE_NOKIA_DISPLAY
 Nokia3310LCD  disp(9, 8, 7);
 const uint8_t LCD_BACKLIGHT = A0;
+#endif
 const uint8_t LED_RED   = 5;
 const uint8_t LED_GREEN = 6;
 const uint8_t LED_BLUE  = 3;
@@ -82,8 +87,6 @@ const uint8_t PIEZO_BUZZER = 4;
 #endif
 
 #ifdef ENABLE_NFC
-#define NFC_IRQ   (2)
-#define NFC_RESET (3)  // Not connected by default on the NFC Shield
 PN532 nfc(13, 12, 11, 10);
 void toHex(char* buf, const uint8_t uid);
 #endif
@@ -91,14 +94,18 @@ void toHex(char* buf, const uint8_t uid);
 uint8_t recvBuffer[40];
 uint8_t recvPos;
 unsigned long recvLast;
+bool nothingReceived;
 
 void setup()   
 {
     recvPos = 0;
     recvLast = millis();
+    nothingReceived = true;
 
+#ifdef ENABLE_NOKIA_DISPLAY
     pinMode(LCD_BACKLIGHT, OUTPUT);
     digitalWrite(LCD_BACKLIGHT, LOW);
+#endif
     pinMode(LED_RED,   OUTPUT);
     pinMode(LED_GREEN, OUTPUT);
     pinMode(LED_BLUE,  OUTPUT);
@@ -109,6 +116,17 @@ void setup()
     pinMode(PIEZO_BUZZER, OUTPUT);
 #endif
 
+#ifdef ENABLE_SERIAL_INP
+	Serial.begin(115200);
+#else
+ #ifdef ENABLE_SERIAL_DBG
+	Serial.begin(115200);
+ #endif
+#endif
+
+    SPI.begin();
+//    SPI.setClockDivider(SPI_CLOCK_DIV64); // 250 kHz
+
 #ifdef ENABLE_NFC
     nfc.begin();
 
@@ -116,24 +134,27 @@ void setup()
     // This prevents us from waiting forever for a card, which is
     // the default behaviour of the PN532.
 //    nfc.setPassiveActivationRetries(0xFF);
+    
+ #ifdef ENABLE_SERIAL_DBG
+     const uint8_t nfcVer = nfc.getFirmwareVersion();
+     if(0 == nfcVer)
+         Serial << "NFC reader not found\n";
+     else
+         Serial << "NFC Firmware version: " << _DEC(nfcVer) << "\n";
+ #endif
 
     // configure board to read RFID tags
     nfc.SAMConfig();
-#endif
-
-#ifdef ENABLE_SERIAL_INP
-	Serial.begin(115200);
 #endif
     
     Wire.begin(0x19); // join i2c bus with address #0x19
     Wire.onReceive(receiveI2C); // register event
    
-    SPI.begin();
-    SPI.setClockDivider(SPI_CLOCK_DIV64); // 250 kHz
-
+#ifdef ENABLE_NOKIA_DISPLAY
     disp.init();
     disp.LcdContrast(0x40);
     ShowStartupScreen();
+#endif
 
 	// give some hints to guess if the clock speed is accurate
 #ifdef ENABLE_BUZZER
@@ -146,9 +167,31 @@ void setup()
 
 void loop()                     
 {
-    HandleI2cCommands();
+    if(nothingReceived)
+    {
+#ifdef ENABLE_SERIAL_DBG
+       Serial << "Reading NFC\n";
+#endif
+        const uint8_t id = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A);
+        if(0 != id)
+        {
+#ifdef ENABLE_SERIAL_DBG
+	    Serial << "NFC ID:  " << _DEC(id) << "\n";
+#endif
+#ifdef ENABLE_NOKIA_DISPLAY            
+            char buf[3];
+            disp.LcdGotoXYFont(0, 0);
+
+            toHex(buf, id);
+            disp.LcdStr(Nokia3310LCD::FONT_1X, buf);
+#endif
+        }
+    }
+    else
+      HandleI2cCommands();
 }
 
+#ifdef ENABLE_NOKIA_DISPLAY
 void DisplayGlyphFromEeprom(const uint8_t xpos, const uint8_t ypos, const int addr, const uint8_t xsize, const uint8_t ysize)
 {
 	const uint8_t bytesPerRow = ceil(xsize / 8.0);
@@ -168,6 +211,7 @@ void DisplayGlyphFromEeprom(const uint8_t xpos, const uint8_t ypos, const int ad
 	}
 	disp.LcdUpdate();
 }
+#endif
 
 void HandleI2cCommands()
 {
@@ -178,6 +222,7 @@ void HandleI2cCommands()
         if(recvPos + 1 < sizeof(recvBuffer))
             recvBuffer[recvPos++] = val;
 		recvLast = millis();
+                nothingReceived = false;
 	}
 #endif
 
@@ -195,6 +240,7 @@ void HandleI2cCommands()
     {
         case 0xA1: // change the i2c address -> not yet supported    
             break;
+#ifdef ENABLE_NOKIA_DISPLAY
         case 0xB0: // sets all pixels to white     
             disp.LcdClear();
             break;
@@ -235,6 +281,7 @@ void HandleI2cCommands()
         case 0xC2: // backlight off   
             digitalWrite(LCD_BACKLIGHT, LOW);
             break;
+#endif
         case 0xC3: // red led brightness
             if(recvPos < 2)
                 return;
@@ -277,6 +324,7 @@ void HandleI2cCommands()
 
 			break;
 		}
+#ifdef ENABLE_NOKIA_DISPLAY
 		case 0xD2: // display glyph from eeprom (xpos, ypos, addr, xsize, ysize)
 		{
             if(recvPos < 7)
@@ -313,6 +361,7 @@ void HandleI2cCommands()
 			break;
 		}
 #endif
+#endif
 #ifdef ENABLE_SERIAL_DBG
 		case 0xE1: // dump data from eeprom to serial for debugging (addr, size)
 		{
@@ -338,11 +387,15 @@ void HandleI2cCommands()
             const uint8_t id = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A);
             if(0 != id)
             {
+                Wire.write(id);
+
+#ifdef ENABLE_NOKIA_DISPLAY
                 char buf[3];
                 disp.LcdGotoXYFont(0, 0);
 
                 toHex(buf, id);
                 disp.LcdStr(Nokia3310LCD::FONT_1X, buf);
+#endif                
             }
 
             break;
@@ -380,8 +433,10 @@ void receiveI2C(int howMany)
             recvBuffer[recvPos++] = val;
     }
     recvLast = millis();
+    nothingReceived = false;
 }
 
+#ifdef ENABLE_NOKIA_DISPLAY
 void ShowStartupScreen()
 {
     disp.LcdClear();
@@ -406,4 +461,5 @@ void ShowStartupScreen()
 #endif
     disp.LcdUpdate();
 }
+#endif
 
