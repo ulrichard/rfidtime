@@ -78,6 +78,12 @@
 Nokia3310LCD  disp(9, 8, 7);
 const uint8_t LCD_BACKLIGHT = A0;
 #endif
+
+#ifdef ENABLE_NFC
+PN532 nfc(13, 12, 11, 10); // clk, miso, mosi, ss-scl
+void toHex(char* buf, const uint8_t uid);
+#endif
+
 const uint8_t LED_RED   = 5;
 const uint8_t LED_GREEN = 6;
 const uint8_t LED_BLUE  = 3;
@@ -86,15 +92,13 @@ const uint8_t LED_BLUE  = 3;
 const uint8_t PIEZO_BUZZER = 4;
 #endif
 
-#ifdef ENABLE_NFC
-PN532 nfc(13, 12, 11, 10);
-void toHex(char* buf, const uint8_t uid);
-#endif
-
 uint8_t recvBuffer[40];
 uint8_t recvPos;
 unsigned long recvLast;
 bool nothingReceived;
+
+void HandleI2cCommands();
+void receiveI2C(int);
 
 void setup()   
 {
@@ -124,8 +128,6 @@ void setup()
  #endif
 #endif
 
-    SPI.begin();
-//    SPI.setClockDivider(SPI_CLOCK_DIV64); // 250 kHz
 
 #ifdef ENABLE_NFC
     nfc.begin();
@@ -145,7 +147,10 @@ void setup()
 
     // configure board to read RFID tags
     nfc.SAMConfig();
+#else
 #endif
+    SPI.begin();
+//    SPI.setClockDivider(SPI_CLOCK_DIV64); // 250 kHz
     
     Wire.begin(0x19); // join i2c bus with address #0x19
     Wire.onReceive(receiveI2C); // register event

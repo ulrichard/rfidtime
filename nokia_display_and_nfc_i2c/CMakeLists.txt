@@ -10,6 +10,7 @@ PROJECT(nokia_display_i2c)
 
 SET(AVR_DEVICE     atmega328)
 SET(AVRDUDE_PORT   /dev/ttyACM0)
+#SET(AVRDUDE_PORT   /dev/ttyUSB0)
 
 generate_arduino_firmware(nokia_display_nfc
     SKETCH ../nokia_display_and_nfc_i2c
