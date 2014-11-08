@@ -81,7 +81,7 @@ const uint8_t LCD_BACKLIGHT = 2;
 
 #ifdef ENABLE_NFC
 PN532 nfc(A0, A1, A2, A3); // clk, miso, mosi, ss-scl
-void toHex(char* buf, const uint8_t uid);
+void toHex(char* buf, const uint32_t uid);
 #endif
 
 const uint8_t LED_RED   = 5;
@@ -172,42 +172,50 @@ void setup()
 
 void loop()                     
 {
-    if(nothingReceived)
+    if(!nothingReceived)
+        HandleI2cCommands();
+#ifdef ENABLE_NFC
+    else
+        ReadNFC();
+#endif
+}
+ 
+#ifdef ENABLE_NFC       
+void ReadNFC()
+{        
+#ifdef ENABLE_SERIAL_DBG
+    Serial << "Reading NFC\n";
+#endif
+    const uint32_t id = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A);
+    if(0 != id)
     {
 #ifdef ENABLE_SERIAL_DBG
-       Serial << "Reading NFC\n";
+        Serial << "NFC ID:  " << _HEX(id) << "\n";
 #endif
-        const uint8_t id = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A);
-        if(0 != id)
-        {
-#ifdef ENABLE_SERIAL_DBG
-	    Serial << "NFC ID:  " << _HEX(id) << "\n";
-#endif
+    
 #ifdef ENABLE_NOKIA_DISPLAY    
-            disp.LcdClear();
-            disp.LcdGotoXYFont(1, 1);
-            disp.LcdStr(Nokia3310LCD::FONT_1X, "NFC tag found:");
+        disp.LcdClear();
+        disp.LcdGotoXYFont(1, 1);
+        disp.LcdStr(Nokia3310LCD::FONT_1X, "NFC tag found:");
             
-            char buf[16];
-            disp.LcdGotoXYFont(1, 2);
-            toHex(buf, id);
-            disp.LcdStr(Nokia3310LCD::FONT_1X, buf);
-            disp.LcdUpdate();
+        char buf[16];
+        disp.LcdGotoXYFont(1, 2);
+        toHex(buf, id);
+        disp.LcdStr(Nokia3310LCD::FONT_1X, buf);
+        disp.LcdUpdate();
 #endif
-        }
-        else
-        {
-#ifdef ENABLE_NOKIA_DISPLAY    
-            disp.LcdClear();
-            disp.LcdGotoXYFont(1, 1);
-            disp.LcdStr(Nokia3310LCD::FONT_1X, "No tag found");
-            disp.LcdUpdate();
-#endif
-        }
     }
     else
-      HandleI2cCommands();
+    {
+#ifdef ENABLE_NOKIA_DISPLAY    
+        disp.LcdClear();
+        disp.LcdGotoXYFont(1, 1);
+        disp.LcdStr(Nokia3310LCD::FONT_1X, "No tag found");
+        disp.LcdUpdate();
+#endif
+    }
 }
+#endif
 
 #ifdef ENABLE_NOKIA_DISPLAY
 void DisplayGlyphFromEeprom(const uint8_t xpos, const uint8_t ypos, const int addr, const uint8_t xsize, const uint8_t ysize)
@@ -402,7 +410,7 @@ void HandleI2cCommands()
 #ifdef ENABLE_NFC
         case 0xF0: // read nfc tag
         {
-            const uint8_t id = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A);
+            const uint32_t id = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A);
             if(0 != id)
             {
                 Wire.write(id);
@@ -432,13 +440,17 @@ void HandleI2cCommands()
 }
 
 #ifdef ENABLE_NFC
-void toHex(char* buf, const uint8_t uid)
+void toHex(char* buf, const uint32_t uid)
 {
-    uint8_t tmp = uid >> 4;
-    buf[0] = (tmp > 9 ? 'A' : '0') + tmp;
-    tmp = uid & 0x0F;
-    buf[1] = (tmp > 9 ? 'A' : '0') + tmp;
-    buf[2] = '\0';
+    uint8_t tmp = 0;
+    
+    for(uint8_t i=0; i<8; ++i)
+    {
+        tmp = uid >> (4 * (7 - i));
+        tmp = tmp & 0x0F;
+        buf[i] = (tmp > 9 ? 'A' - 10 : '0') + tmp;
+    }
+    buf[8] = '\0';
 }
 #endif
 
