@@ -75,12 +75,12 @@
 #include <EEPROM.h>
 
 #ifdef ENABLE_NOKIA_DISPLAY
-Nokia3310LCD  disp(9, 8, 7);
-const uint8_t LCD_BACKLIGHT = A0;
+Nokia3310LCD  disp(9, 8, 7); // cmd/data, reset, chipSel
+const uint8_t LCD_BACKLIGHT = 2;
 #endif
 
 #ifdef ENABLE_NFC
-PN532 nfc(13, 12, 11, 10); // clk, miso, mosi, ss-scl
+PN532 nfc(A0, A1, A2, A3); // clk, miso, mosi, ss-scl
 void toHex(char* buf, const uint8_t uid);
 #endif
 
@@ -147,17 +147,17 @@ void setup()
 
     // configure board to read RFID tags
     nfc.SAMConfig();
-#else
 #endif
     SPI.begin();
-//    SPI.setClockDivider(SPI_CLOCK_DIV64); // 250 kHz
+    SPI.setClockDivider(SPI_CLOCK_DIV64); // 250 kHz
     
     Wire.begin(0x19); // join i2c bus with address #0x19
     Wire.onReceive(receiveI2C); // register event
    
 #ifdef ENABLE_NOKIA_DISPLAY
     disp.init();
-    disp.LcdContrast(0x40);
+//    disp.LcdContrast(0x40);
+    disp.LcdContrast(0x35);
     ShowStartupScreen();
 #endif
 
@@ -181,14 +181,27 @@ void loop()
         if(0 != id)
         {
 #ifdef ENABLE_SERIAL_DBG
-	    Serial << "NFC ID:  " << _DEC(id) << "\n";
+	    Serial << "NFC ID:  " << _HEX(id) << "\n";
 #endif
-#ifdef ENABLE_NOKIA_DISPLAY            
-            char buf[3];
-            disp.LcdGotoXYFont(0, 0);
-
+#ifdef ENABLE_NOKIA_DISPLAY    
+            disp.LcdClear();
+            disp.LcdGotoXYFont(1, 1);
+            disp.LcdStr(Nokia3310LCD::FONT_1X, "NFC tag found:");
+            
+            char buf[16];
+            disp.LcdGotoXYFont(1, 2);
             toHex(buf, id);
             disp.LcdStr(Nokia3310LCD::FONT_1X, buf);
+            disp.LcdUpdate();
+#endif
+        }
+        else
+        {
+#ifdef ENABLE_NOKIA_DISPLAY    
+            disp.LcdClear();
+            disp.LcdGotoXYFont(1, 1);
+            disp.LcdStr(Nokia3310LCD::FONT_1X, "No tag found");
+            disp.LcdUpdate();
 #endif
         }
     }
@@ -425,6 +438,7 @@ void toHex(char* buf, const uint8_t uid)
     buf[0] = (tmp > 9 ? 'A' : '0') + tmp;
     tmp = uid & 0x0F;
     buf[1] = (tmp > 9 ? 'A' : '0') + tmp;
+    buf[2] = '\0';
 }
 #endif
 
