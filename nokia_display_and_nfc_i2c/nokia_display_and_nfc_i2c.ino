@@ -35,11 +35,11 @@
 //                      +-\/-+
 //              RST -> 1|    |28 <-  SCL  -------------- C  I
 //         uart RXD -> 2| A  |27 <-> SDA  -------------- D  2
-//         uart TXD <- 3| T  |26                   +---- V  C
-//                     4| M  |25                   |  +- G                    
-//      LED red    <-  5| E  |24                   |  |   nokia 5110 LCD
-//      buzzer     <-  6| G  |23 -> backlight --+  |  |  +--------------+
-//                VCC  7| A  |22  GND ----------|--|--+--|        GND ->|
+//         uart TXD <- 3| T  |26 ---> SCL  NFC     +---- V  C
+//                     4| M  |25 ---> MOSI NFC     |  +- G                    
+//      LED red    <-  5| E  |24 <--- MISO NFC     |  |   nokia 5110 LCD
+//      buzzer     <-  6| G  |23 ---> SCK  NFC     |  +--------------+
+//                VCC  7| A  |22  GND -------------|--+--|        GND ->|
 //                GND  8|    |21                +--|-----|  backlight ->|
 //          resonator  9| 3  |20  VCC     ---------+-----|        VCC ->|
 //          resonator 10| 2  |19  -> SCK  ---------------|        SCK ->|
@@ -80,7 +80,7 @@ const uint8_t LCD_BACKLIGHT = 2;
 #endif
 
 #ifdef ENABLE_NFC
-PN532 nfc(A0, A1, A2, A3); // clk, miso, mosi, ss-scl
+PN532 nfc(A3, A2, A1, A0); // clk, miso, mosi, ss-scl
 void toHex(char* buf, const uint32_t uid);
 #endif
 
