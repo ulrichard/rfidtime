@@ -50,7 +50,8 @@
 //           |   |      +----+                       | | +--------------+
 //           +---|-----------------------------------+ |
 //               +-------------------------------------+   
-
+//
+// Pinout on the Bifferboard:  1: +3.3v  2: SDA  3: SCL  4: -  5: - 6: GND
 #define ENABLE_NOKIA_DISPLAY
 #define ENABLE_STARTSCREEN
 #define ENABLE_SERIAL_DBG
